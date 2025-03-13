@@ -78,6 +78,30 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "protectedroute",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJ0ZXN0MkB0ZXN0LmNvbSIsInVzZXJuYW1lIjoiSm9lcmkiLCJpYXQiOjE3NDE4ODE2NDgsImV4cCI6MTc0MTg4NTI0OH0.EN5dn7zR9OhIMIg8eHmFmTkEnu4J-fQVvzugThnAzjI",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:3000/protectedroute",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"protectedroute"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }

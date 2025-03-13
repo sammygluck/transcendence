@@ -1,9 +1,15 @@
+const secret = "superSecretStringForJWT"; // move to .env file
+
 // required modules
 const fastify = require("fastify")({ logger: true }); // Require the framework and instantiate it
 
 // Register the plugins
 fastify.register(require("@fastify/websocket"));
-fastify.register(require("./sqlite-connector"));
+fastify.register(require("./plugins/sqlite-connector"));
+fastify.register(require("@fastify/jwt"), {
+	secret: secret,
+});
+fastify.register(require("./plugins/authenticate_jwt"));
 
 //subfiles for routes
 fastify.register(require("./user_routes"));

@@ -69,13 +69,35 @@ async function routes(fastify, options) {
 				reply.statusCode = 401;
 				return { error: "Invalid password" };
 			}
-			return { id: result.id };
+			const token = fastify.jwt.sign(
+				{
+					id: result.id,
+					email: request.body.email,
+					username: request.body.username,
+				},
+				{ expiresIn: "1h" }
+			);
+			return { id: result.id, token: token };
 		} catch (error) {
 			reply.statusCode = 500;
 			console.error("Error logging in: " + error.message);
 			return { error: "Error logging in" };
 		}
 	});
+
+	fastify.get(
+		"/protectedroute",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			return {
+				id: request.user.id,
+				email: request.user.email,
+				username: request.user.username,
+			};
+		}
+	);
 }
 
 module.exports = routes;
