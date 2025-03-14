@@ -1,14 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>ft_transcendence</title>
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-	<canvas id="canvas"></canvas>
-    <script src="script.js"></script>
-  </body>
+    <title>Transcendence - Pong</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Registration -->
+    <div id="registration">
+        <form id="registrationForm">
+            <input type="text" id="alias" placeholder="Alias" required />
+            <input type="email" id="emailReg" placeholder="Email" required />
+            <input type="password" id="passwordReg" placeholder="Password" required />
+            <button type="submit">Register</button>
+        </form>
+    </div>    
+    <!-- Login -->
+     <div id="login">
+        <form id="loginForm">
+            <input type="email" id="emailLogin" placeholder="Email" required />
+            <input type="password" id="passwordLogin" placeholder="Password" required />
+            <button type="submit">Login</button>
+        </form>
+     </div>
+    <!-- GAME SECTION -->
+    <h1 id="welcome-message">Welcome to Transcendence Pong</h1>
+    <canvas id="pongCanvas"></canvas>
+    <script src="pong.js"></script>
+
+</body>
 </html>

@@ -1,0 +1,10 @@
+  canvas {
+    display: block;
+    margin: 0 auto;
+  }
+
+  #welcome-message {
+    text-align: center;
+    width: 100%;
+  }
+  
