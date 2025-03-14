@@ -19,6 +19,27 @@ fastify.get("/", function handler(request, reply) {
 	reply.send({ hello: "world" });
 });
 
+// websocket route
+fastify.register(async function (fastify) {
+	fastify.get(
+		"/ws",
+		{ websocket: true /*, onRequest: [fastify.authenticate]*/ },
+		(socket, req) => {
+			socket.on("message", (message) => {
+				console.log("ws message: ", message.toString());
+			});
+			console.log("ws connection established");
+			let id = setInterval(() => {
+				socket.send(Date.now());
+			}, 5000);
+			socket.on("close", () => {
+				clearInterval(id);
+				console.log("ws connection closed");
+			});
+		}
+	);
+});
+
 // Run the server!
 fastify.listen({ port: 3000 }, (err) => {
 	if (err) {
