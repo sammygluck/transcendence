@@ -17,12 +17,17 @@ class Paddle {
         this.dy = 0;
     }
 
-    move(): void 
+    move(duration: number): void 
     {
-        if (this.y + this.dy >= 0 && this.y + this.height + this.dy <= 100)
-        {
-            this.y += this.dy;
-        }
+        this.y += this.dy * duration / 1000;
+		if (this.y < 0)
+		{
+			this.y = 0;
+		}
+		else if (this.y + this.height > 100)
+		{
+			this.y = 100 - this.height;
+		}
     }
 
     draw(ctx: CanvasRenderingContext2D, canvasHeight: number): void
@@ -49,10 +54,10 @@ class Ball {
         this.speedY = speed;
     }
 
-    move(): void
+    move(duration: number): void
     {
-        this.x += this.speedX;
-        this.y += this.speedY;
+        this.x += this.speedX * duration / 1000;
+        this.y += this.speedY * duration / 1000;
 
         if ((this.y - this.radius <= 0 && this.speedY < 0) || (this.y + this.radius >= 100 && this.speedY > 0))
         {
@@ -107,19 +112,21 @@ class Game {
     ball: Ball;
     scoreLeft: number;
     scoreRight: number;
+	prevTime: number;
 
     constructor(canvas: HTMLCanvasElement)
     {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!; //need explantion
-        this.paddleLeft = new Paddle(1, 45 , 2, 10, 1);
-        this.paddleRight = new Paddle(197, 45, 2, 10, 1);
-        this.ball = new Ball(100, 50, 1, 0.5);
+        this.paddleLeft = new Paddle(1, 45 , 2, 10, 30);
+        this.paddleRight = new Paddle(197, 45, 2, 10, 30);
+        this.ball = new Ball(100, 50, 1, 30);
         this.scoreLeft = 0;
         this.scoreRight = 0;
+		this.prevTime = 0;
 
         this.handleInput();
-        this.loop();
+        this.loop(0);
     }
 
     private handleInput(): void {
@@ -138,16 +145,18 @@ class Game {
         })
     }
 
-    private loop(): void {
-        this.update();
+    private loop(timestamp: number): void {
+		if (timestamp - this.prevTime < 1000)
+        	this.update(timestamp - this.prevTime);
         this.render();
-        requestAnimationFrame(() => this.loop());
+		this.prevTime = timestamp;
+        requestAnimationFrame((timestamp) => this.loop(timestamp));
     }
 
-    private update(): void {
-        this.paddleLeft.move();
-        this.paddleRight.move();
-        this.ball.move();
+    private update(duration: number): void {
+        this.paddleLeft.move(duration);
+        this.paddleRight.move(duration);
+        this.ball.move(duration);
         this.ball.checkCollision(this.paddleLeft);
         this.ball.checkCollision(this.paddleRight);
 
