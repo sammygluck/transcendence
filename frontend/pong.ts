@@ -1,3 +1,5 @@
+// all numbers are in % of screen height, if the aspect ratio is fixed to 2, this means that the x axis goes to 200%
+
 class Paddle {
     x: number;
     y: number;
@@ -15,18 +17,19 @@ class Paddle {
         this.dy = 0;
     }
 
-    move(canvasHeight: number): void 
+    move(): void 
     {
-        if (this.y + this.dy >= 0 && this.y + this.height + this.dy <= canvasHeight)
+        if (this.y + this.dy >= 0 && this.y + this.height + this.dy <= 100)
         {
             this.y += this.dy;
         }
     }
 
-    draw(ctx: CanvasRenderingContext2D): void
+    draw(ctx: CanvasRenderingContext2D, canvasHeight: number): void
     {
+		let scaleFactor = canvasHeight / 100;
         ctx.fillStyle = "white";
-        ctx.fillRect(this.x, this.y, this.width, this.height)
+        ctx.fillRect(this.x * scaleFactor, this.y * scaleFactor, this.width * scaleFactor, this.height * scaleFactor);
     }
 }
 
@@ -46,12 +49,12 @@ class Ball {
         this.speedY = speed;
     }
 
-    move(canvasWidth: number, canvasHeight: number): void
+    move(): void
     {
         this.x += this.speedX;
         this.y += this.speedY;
 
-        if (this.y - this.radius <= 0 || this.y + this.radius >= canvasHeight)
+        if ((this.y - this.radius <= 0 && this.speedY < 0) || (this.y + this.radius >= 100 && this.speedY > 0))
         {
             this.speedY *= -1;
         }
@@ -59,18 +62,39 @@ class Ball {
 
     checkCollision(paddle: Paddle): void
     {
+		// we may have to add collision detection with the top and bottom of the paddle
+
+		// y direction
+		if (this.y >= paddle.y && this.y <= paddle.y + paddle.height)
+		{
+			// x direction left paddle
+			if (this.speedX < 0 && paddle.x < 50 && this.x - this.radius <= paddle.x + paddle.width)
+			{
+				this.speedX *= -1;
+			}
+			// x direction right paddle
+			else if (this.speedX > 0 && paddle.x > 50 && this.x + this.radius >= paddle.x)
+			{
+				this.speedX *= -1;
+			}
+		}
+
+		// with the code below, the ball was sticking to the paddle sometimes
+		/*
         if ( this.x - this.radius <= paddle.x + paddle.width && this.x + this.radius >= paddle.x &&
             this.y >= paddle.y && this.y <= paddle.y + paddle.height )
         {
             this.speedX *= -1;
         }
+			*/
     }
 
-    draw(ctx: CanvasRenderingContext2D): void
+    draw(ctx: CanvasRenderingContext2D, canvasHeight: number): void
     {
+		let scaleFactor = canvasHeight / 100;
         ctx.fillStyle = "white";
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.arc(this.x * scaleFactor, this.y * scaleFactor, this.radius * scaleFactor, 0, Math.PI * 2);
         ctx.fill();
     }
 }
@@ -88,9 +112,9 @@ class Game {
     {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d")!; //need explantion
-        this.paddleLeft = new Paddle(10, canvas.height / 2 - 40, 10, 80, 5);
-        this.paddleRight = new Paddle(canvas.width - 20, canvas.height / 2 - 40, 10, 80, 5);
-        this.ball = new Ball(canvas.width / 2, canvas.height / 2, 8, 3);
+        this.paddleLeft = new Paddle(1, 45 , 2, 10, 1);
+        this.paddleRight = new Paddle(197, 45, 2, 10, 1);
+        this.ball = new Ball(100, 50, 1, 0.5);
         this.scoreLeft = 0;
         this.scoreRight = 0;
 
@@ -107,8 +131,10 @@ class Game {
         })
 
         window.addEventListener("keyup", (e) => {
-            if (e.key === "w" || e.key === "s") this.paddleLeft.dy = 0;
-            if (e.key === "ArrowUp" || e.key === "ArrowDown") this.paddleRight.dy = 0;
+            if (e.key === "w" && this.paddleLeft.dy < 0) this.paddleLeft.dy = 0;
+            if (e.key === "s" && this.paddleLeft.dy > 0) this.paddleLeft.dy = 0;
+            if (e.key === "ArrowUp" && this.paddleRight.dy < 0 ) this.paddleRight.dy = 0;
+            if (e.key === "ArrowDown" && this.paddleRight.dy > 0 ) this.paddleRight.dy = 0;
         })
     }
 
@@ -119,9 +145,9 @@ class Game {
     }
 
     private update(): void {
-        this.paddleLeft.move(this.canvas.height);
-        this.paddleRight.move(this.canvas.height);
-        this.ball.move(this.canvas.width, this.canvas.height);
+        this.paddleLeft.move();
+        this.paddleRight.move();
+        this.ball.move();
         this.ball.checkCollision(this.paddleLeft);
         this.ball.checkCollision(this.paddleRight);
 
@@ -130,7 +156,7 @@ class Game {
             this.scoreRight++;
             this.resetBall();
         }
-        else if (this.ball.x > this.canvas.width)
+        else if (this.ball.x > 200)
         {
             this.scoreLeft++;
             this.resetBall();
@@ -139,8 +165,8 @@ class Game {
 
     private resetBall(): void
     {
-        this.ball.x = this.canvas.width / 2;
-        this.ball.y = this.canvas.height / 2;
+        this.ball.x = 100;
+        this.ball.y = 50;
         this.ball.speedX = -this.ball.speedX;
     }
 
@@ -149,9 +175,9 @@ class Game {
         this.ctx.fillStyle = "black";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.paddleLeft.draw(this.ctx);
-        this.paddleRight.draw(this.ctx);
-        this.ball.draw(this.ctx);
+        this.paddleLeft.draw(this.ctx, this.canvas.height);
+        this.paddleRight.draw(this.ctx, this.canvas.height);
+        this.ball.draw(this.ctx, this.canvas.height);
 
         this.ctx.fillStyle = "white";
         this.ctx.font = "20px Arial";
