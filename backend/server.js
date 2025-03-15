@@ -15,6 +15,7 @@ fastify.register(require("@fastify/static"), {
 	root: path.join(__dirname, "..", "frontend"),
 	//prefix: "/public/", // optional: default '/'
 });
+fastify.register(require("@fastify/formbody")); // parse x-www-form-urlencoded bodies
 
 //subfiles for routes
 fastify.register(require("./user_routes"));

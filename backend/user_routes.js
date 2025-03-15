@@ -1,4 +1,6 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const fetch = require("node-fetch");
 
 async function routes(fastify, options) {
 	fastify.get("/user/:id", async (request, reply) => {
@@ -98,6 +100,47 @@ async function routes(fastify, options) {
 			};
 		}
 	);
+
+	// google auth
+	async function verifyGoogleToken(token) {
+		const GOOGLE_PUBLIC_KEY_URL = "https://www.googleapis.com/oauth2/v1/certs";
+		try {
+			// Fetch Google's public keys
+			const response = await fetch(GOOGLE_PUBLIC_KEY_URL);
+			const keys = await response.json();
+
+			// Find the matching key for this token
+			const decodedHeader = JSON.parse(
+				Buffer.from(token.split(".")[0], "base64").toString()
+			);
+
+			const key = keys[decodedHeader.kid];
+			if (!key) throw new Error("Invalid key ID");
+
+			// Verify the token
+			const verifiedToken = jwt.verify(token, key, { algorithms: ["RS256"] });
+
+			return verifiedToken;
+		} catch (error) {
+			console.error("Google token verification failed:", error);
+			return null;
+		}
+	}
+
+	fastify.post("/googleauth", async (request, reply) => {
+		const credential = request.body.credential;
+		if (!credential) {
+			reply.statusCode = 400;
+			return { error: "Missing required fields" };
+		}
+		const verifiedToken = await verifyGoogleToken(credential);
+		if (!verifiedToken) {
+			reply.statusCode = 401;
+			return { error: "Invalid token" };
+		}
+		console.log("Google auth succes: ", verifiedToken);
+		return { message: "Google auth succes" };
+	});
 }
 
 module.exports = routes;

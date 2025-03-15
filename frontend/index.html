@@ -29,5 +29,27 @@
     <canvas id="pongCanvas"></canvas>
     <script src="pong.js"></script>
 
+	<!-- GOOGLE SIGN IN -->
+    <script src="https://accounts.google.com/gsi/client" async></script>
+	<script src="auth.js"></script>
+	<div id="g_id_onload"
+		data-client_id="244561649148-pbll9pc66oig5mcul4ivjp9igql4emef.apps.googleusercontent.com"
+		data-context="signin"
+		data-ux_mode="popup"
+		data-login_uri="http://localhost:3000/googleauth"
+		data-auto_prompt="false"
+		data-callback="handleGoogleCredentialResponse"
+		>
+	</div>
+
+	<div class="g_id_signin" data-locale="en"
+		data-type="standard"
+		data-shape="rectangular"
+		data-theme="outline"
+		data-text="signin_with"
+		data-size="large"
+		data-logo_alignment="left">
+	</div>
+
 </body>
 </html>
