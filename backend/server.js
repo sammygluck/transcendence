@@ -2,6 +2,7 @@ const secret = "superSecretStringForJWT"; // move to .env file
 
 // required modules
 const fastify = require("fastify")({ logger: true }); // Require the framework and instantiate it
+const path = require("node:path");
 
 // Register the plugins
 fastify.register(require("@fastify/websocket"));
@@ -10,14 +11,18 @@ fastify.register(require("@fastify/jwt"), {
 	secret: secret,
 });
 fastify.register(require("./plugins/authenticate_jwt"));
+fastify.register(require("@fastify/static"), {
+	root: path.join(__dirname, "..", "frontend"),
+	//prefix: "/public/", // optional: default '/'
+});
 
 //subfiles for routes
 fastify.register(require("./user_routes"));
 
 // Declare a route
-fastify.get("/", function handler(request, reply) {
+/*fastify.get("/", function handler(request, reply) {
 	reply.send({ hello: "world" });
-});
+});*/
 
 // websocket route
 fastify.register(async function (fastify) {
