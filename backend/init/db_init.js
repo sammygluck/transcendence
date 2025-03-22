@@ -17,7 +17,8 @@ db.run(
 	updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	google_sign_in BOOLEAN DEFAULT FALSE,
 	blocked_users TEXT DEFAULT NULL,
-	friends TEXT DEFAULT NULL
+	friends TEXT DEFAULT NULL,
+	avatar TEXT DEFAULT NULL
 	)`,
 	(err) => {
 		if (err) {

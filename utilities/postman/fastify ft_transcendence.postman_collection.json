@@ -13,7 +13,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"username\": \"Joeri\",\r\n    \"email\": \"test2@test.com\",\r\n    \"password\": \"test\"\r\n}",
+					"raw": "{\r\n    \"username\": \"Joeri\",\r\n    \"email\": \"test@test.com\",\r\n    \"password\": \"test\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -37,16 +37,22 @@
 			"name": "user",
 			"request": {
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{bearertoken}}",
+						"type": "text"
+					}
+				],
 				"url": {
-					"raw": "localhost:3000/user/3",
+					"raw": "localhost:3000/user/1",
 					"host": [
 						"localhost"
 					],
 					"port": "3000",
 					"path": [
 						"user",
-						"3"
+						"1"
 					]
 				}
 			},
@@ -59,7 +65,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"username\": \"Joeri\",\r\n    \"email\": \"test2@test.com\",\r\n    \"password\": \"test\"\r\n}",
+					"raw": "{\r\n    \"username\": \"Joeri\",\r\n    \"email\": \"test@test.com\",\r\n    \"password\": \"test\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -86,7 +92,7 @@
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJ0ZXN0MkB0ZXN0LmNvbSIsInVzZXJuYW1lIjoiSm9lcmkiLCJpYXQiOjE3NDE4ODE2NDgsImV4cCI6MTc0MTg4NTI0OH0.EN5dn7zR9OhIMIg8eHmFmTkEnu4J-fQVvzugThnAzjI",
+						"value": "Bearer {{bearertoken}}",
 						"type": "text"
 					}
 				],
@@ -102,6 +108,224 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "update user",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{bearertoken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"username\": \"joeri123\",\r\n     \"friends\": [\"2\", \"3\"]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/user",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"user"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "currentuser",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{bearertoken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:3000/currentuser",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"currentuser"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "friend",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{bearertoken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"friendId\": 5\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/friend",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"friend"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "friend",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{bearertoken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"friendId\": 5\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/friend",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"friend"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "block",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{bearertoken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userId\": 2\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/block",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"block"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "block",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{bearertoken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"userId\": 5\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/block",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"block"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "bearertoken",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwidXNlcm5hbWUiOiJKb2VyaSIsImlhdCI6MTc0MjY1NjY1MywiZXhwIjoxNzQyNjg1NDUzfQ.jYJMVZzTiA_1A2o6YMsKw-0rCTHWdhaG0FmOpYlNQIk",
+			"type": "string"
 		}
 	]
 }

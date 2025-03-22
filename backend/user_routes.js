@@ -3,23 +3,53 @@ const jwt = require("jsonwebtoken");
 const fetch = require("node-fetch");
 
 async function routes(fastify, options) {
-	fastify.get("/user/:id", async (request, reply) => {
-		try {
-			const result = await fastify.sqlite.get(
-				"SELECT users.id, users.username, users.email, users.created_at, users.updated_at FROM users WHERE id = ?",
-				[request.params.id]
-			);
-			if (!result) {
-				reply.statusCode = 404;
-				return { error: "User not found" };
+	fastify.get(
+		"/user/:id",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			try {
+				const result = await fastify.sqlite.get(
+					"SELECT users.id, users.username, users.email, users.created_at, users.updated_at, users.friends, users.avatar FROM users WHERE id = ?",
+					[request.params.id]
+				);
+				if (!result) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				return result;
+			} catch (error) {
+				reply.statusCode = 500;
+				console.error("Error getting user: " + error.message);
+				return { error: "Error getting user" };
 			}
-			return result;
-		} catch (error) {
-			reply.statusCode = 500;
-			console.error("Error getting user: " + error.message);
-			return { error: "Error getting user" };
 		}
-	});
+	);
+
+	fastify.get(
+		"/currentuser",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			try {
+				const result = await fastify.sqlite.get(
+					"SELECT users.id, users.username, users.email, users.created_at, users.updated_at, users.blocked_users, users.friends, users.avatar FROM users WHERE id = ?",
+					[request.user.id]
+				);
+				if (!result) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				return result;
+			} catch (error) {
+				reply.statusCode = 500;
+				console.error("Error getting user: " + error.message);
+				return { error: "Error getting user" };
+			}
+		}
+	);
 
 	fastify.post("/user", async (request, reply) => {
 		if (
@@ -228,6 +258,268 @@ async function routes(fastify, options) {
 			return { error: "Error logging in" };
 		}
 	});
+
+	// update user information (username, avatar, blocked_users, friends)
+	// email cannot be updated at the moment
+	// password cannot be updated with this api
+	fastify.put(
+		"/user",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			if (!request.body.username) {
+				reply.statusCode = 400;
+				return { error: "Missing required fields" };
+			}
+			const username = request.body.username;
+			const avatar = request.body.avatar || null;
+			const updated_at = new Date()
+				.toISOString()
+				.slice(0, 19)
+				.replace("T", " ");
+			let blocked_users = request.body.blocked_users || null;
+			let friends = request.body.friends || null;
+			if (
+				blocked_users &&
+				!(typeof blocked_users === "string" || blocked_users instanceof String)
+			) {
+				blocked_users = JSON.stringify(blocked_users);
+			}
+			if (
+				friends &&
+				!(typeof friends === "string" || friends instanceof String)
+			) {
+				friends = JSON.stringify(friends);
+			}
+			try {
+				const result = await fastify.sqlite.run(
+					"UPDATE users SET username = ?, avatar = ?, blocked_users = ?, friends = ?, updated_at = ? WHERE id = ?",
+					[
+						username,
+						avatar,
+						blocked_users,
+						friends,
+						updated_at,
+						request.user.id,
+					]
+				);
+				console.log(result);
+				if (result.changes === 0) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				reply.statusCode = 204; // no content
+				return;
+			} catch (error) {
+				console.error("Error updating user: " + error.message);
+				reply.statusCode = 500;
+				return { error: "Error updating user" };
+			}
+		}
+	);
+
+	// add friend
+	fastify.post(
+		"/friend",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			if (!request.body.friendId) {
+				reply.statusCode = 400;
+				return { error: "Missing required fields" };
+			}
+			try {
+				const result = await fastify.sqlite.get(
+					"SELECT friends FROM users WHERE id = ?",
+					[request.user.id]
+				);
+				if (!result) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				let friends = result.friends ? JSON.parse(result.friends) : [];
+				const friendId = request.body.friendId.toString();
+				if (friends.includes(friendId)) {
+					reply.statusCode = 409;
+					return { error: "Friend already added", friends: friends };
+				}
+				friends.push(friendId);
+				const updated_at = new Date()
+					.toISOString()
+					.slice(0, 19)
+					.replace("T", " ");
+				const updateResult = await fastify.sqlite.run(
+					"UPDATE users SET friends = ?, updated_at = ? WHERE id = ?",
+					[JSON.stringify(friends), updated_at, request.user.id]
+				);
+				if (updateResult.changes === 0) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				return { friends: friends };
+			} catch (error) {
+				console.error("Error adding friend: " + error.message);
+				reply.statusCode = 500;
+				return { error: "Error adding friend" };
+			}
+		}
+	);
+
+	// remove friend
+	fastify.delete(
+		"/friend",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			if (!request.body.friendId) {
+				reply.statusCode = 400;
+				return { error: "Missing required fields" };
+			}
+			try {
+				const result = await fastify.sqlite.get(
+					"SELECT friends FROM users WHERE id = ?",
+					[request.user.id]
+				);
+				if (!result) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				let friends = result.friends ? JSON.parse(result.friends) : [];
+				const friendId = request.body.friendId.toString();
+				if (!friends.includes(friendId)) {
+					reply.statusCode = 409;
+					return { error: "Friend not found", friends: friends };
+				}
+				friends = friends.filter((id) => id !== friendId);
+				const updated_at = new Date()
+					.toISOString()
+					.slice(0, 19)
+					.replace("T", " ");
+				const updateResult = await fastify.sqlite.run(
+					"UPDATE users SET friends = ?, updated_at = ? WHERE id = ?",
+					[JSON.stringify(friends), updated_at, request.user.id]
+				);
+				if (updateResult.changes === 0) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				return { friends: friends };
+			} catch (error) {
+				console.error("Error removing friend: " + error.message);
+				reply.statusCode = 500;
+				return { error: "Error removing friend" };
+			}
+		}
+	);
+
+	// block user
+	fastify.post(
+		"/block",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			if (!request.body.userId) {
+				reply.statusCode = 400;
+				return { error: "Missing required fields" };
+			}
+			try {
+				const result = await fastify.sqlite.get(
+					"SELECT blocked_users FROM users WHERE id = ?",
+					[request.user.id]
+				);
+				if (!result) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				let blocked_users = result.blocked_users
+					? JSON.parse(result.blocked_users)
+					: [];
+				const userId = request.body.userId.toString();
+				if (blocked_users.includes(userId)) {
+					reply.statusCode = 409;
+					return {
+						error: "User already blocked",
+						blocked_users: blocked_users,
+					};
+				}
+				blocked_users.push(userId);
+				const updated_at = new Date()
+					.toISOString()
+					.slice(0, 19)
+					.replace("T", " ");
+				const updateResult = await fastify.sqlite.run(
+					"UPDATE users SET blocked_users = ?, updated_at = ? WHERE id = ?",
+					[JSON.stringify(blocked_users), updated_at, request.user.id]
+				);
+				if (updateResult.changes === 0) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				return { blocked_users: blocked_users };
+			} catch (error) {
+				console.error("Error blocking user: " + error.message);
+				reply.statusCode = 500;
+				return { error: "Error blocking user" };
+			}
+		}
+	);
+
+	// unblock user
+	fastify.delete(
+		"/block",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			if (!request.body.userId) {
+				reply.statusCode = 400;
+				return { error: "Missing required fields" };
+			}
+			try {
+				const result = await fastify.sqlite.get(
+					"SELECT blocked_users FROM users WHERE id = ?",
+					[request.user.id]
+				);
+				if (!result) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				let blocked_users = result.blocked_users
+					? JSON.parse(result.blocked_users)
+					: [];
+				const userId = request.body.userId.toString();
+				if (!blocked_users.includes(userId)) {
+					reply.statusCode = 409;
+					return {
+						error: "User not blocked",
+						blocked_users: blocked_users,
+					};
+				}
+				blocked_users = blocked_users.filter((id) => id !== userId);
+				const updated_at = new Date()
+					.toISOString()
+					.slice(0, 19)
+					.replace("T", " ");
+				const updateResult = await fastify.sqlite.run(
+					"UPDATE users SET blocked_users = ?, updated_at = ? WHERE id = ?",
+					[JSON.stringify(blocked_users), updated_at, request.user.id]
+				);
+				if (updateResult.changes === 0) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				return { blocked_users: blocked_users };
+			} catch (error) {
+				console.error("Error unblocking user: " + error.message);
+				reply.statusCode = 500;
+				return { error: "Error unblocking user" };
+			}
+		}
+	);
 }
 
 module.exports = routes;
