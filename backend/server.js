@@ -46,6 +46,31 @@ fastify.register(async function (fastify) {
 	);
 });
 
+// websocket chat route
+const chatClients = new Set();
+fastify.register(async function (fastify) {
+	fastify.get(
+		"/chat",
+		{ websocket: true /*onRequest: [fastify.authenticate]*/ },
+		(socket, req) => {
+			socket.on("message", (message) => {
+				console.log("chat message: ", message.toString());
+				for (const client of chatClients) {
+					if (client.readyState === WebSocket.OPEN) {
+						client.send(message.toString());
+					}
+				}
+			});
+			chatClients.add(socket);
+			console.log("client connected to chat");
+			socket.on("close", () => {
+				chatClients.delete(socket);
+				console.log("client disconnected from chat");
+			});
+		}
+	);
+});
+
 // Run the server!
 fastify.listen({ port: 3000 }, (err) => {
 	if (err) {
