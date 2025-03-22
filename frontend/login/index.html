@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
+    <title>Login & Signup Page</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,20 +13,21 @@
             height: 100vh;
             background-color: #f4f4f4;
         }
-        .login-container {
+        .container {
             background: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
-        .login-container input {
+        .container input {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
-        .login-container button {
+        .container button {
             width: 100%;
             padding: 10px;
             background-color: #28a745;
@@ -35,42 +36,63 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        .login-container button:hover {
+        .container button:hover {
             background-color: #218838;
+        }
+        .toggle {
+            margin-top: 10px;
+            color: blue;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Login</h2>
-        <input type="text" id="email" placeholder="Email" required>
-        <input type="password" id="password" placeholder="Password" required>
-        <button onclick="login()">Login</button>
+    <div class="container" id="auth-container">
+        <h2 id="form-title">Login</h2>
+        <input type="text" id="username" placeholder="Username" required style="display: none;">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required >
+        <button onclick="authenticate()" id="auth-button">Login</button>
         <p id="message" style="color: red;"></p>
+        <p class="toggle" onclick="toggleForm()">Don't have an account? Sign up</p>
     </div>
 
     <script>
-        async function login() {
+        let isLogin = true;
+
+        function toggleForm() {
+            isLogin = !isLogin;
+            document.getElementById("form-title").textContent = isLogin ? "Login" : "Sign Up";
+            document.getElementById("auth-button").textContent = isLogin ? "Login" : "Sign Up";
+            document.querySelector(".toggle").textContent = isLogin ? "Don't have an account? Sign up" : "Already have an account? Login";
+            document.getElementById("username").style.display = isLogin ? "none" : "block";
+        }
+
+        async function authenticate() {
+            const username = document.getElementById("username").value;
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
             const message = document.getElementById("message");
-
-            const response = await fetch("/login", {
+            
+            const endpoint = isLogin ? "/login" : "/user";
+            const bodyData = isLogin ? { email, password } : { email, username, password };
+            
+            const response = await fetch(endpoint, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify(bodyData)
             });
 
             const data = await response.json();
 
             if (response.ok) {
                 message.style.color = "green";
-                message.textContent = "Login successful!";
-                // Redirect or store token as needed
+                message.textContent = isLogin ? "Login successful!" : "Signup successful!";
             } else {
-                message.textContent = data.message || "Login failed!";
+				message.style.color = "red";
+                message.textContent = data.message || (isLogin ? "Login failed!" : "Signup failed!");
             }
         }
     </script>
