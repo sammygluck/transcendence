@@ -12,9 +12,12 @@ db.run(
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	username TEXT NOT NULL UNIQUE,
 	email TEXT NOT NULL UNIQUE,
-	password_hash TEXT NOT NULL,
+	password_hash TEXT,
 	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-	updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+	updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+	google_sign_in BOOLEAN DEFAULT FALSE,
+	blocked_users TEXT DEFAULT NULL,
+	friends TEXT DEFAULT NULL
 	)`,
 	(err) => {
 		if (err) {

@@ -30,6 +30,22 @@ async function routes(fastify, options) {
 			reply.statusCode = 400;
 			return { error: "Missing required fields" };
 		}
+		// verify email format
+		const atIndex = request.body.email.indexOf("@");
+		const dotIndex = request.body.email.lastIndexOf(".");
+		if (
+			atIndex < 1 ||
+			dotIndex < atIndex + 2 ||
+			dotIndex + 2 >= request.body.email.length
+		) {
+			reply.statusCode = 400;
+			return { error: "Invalid email format" };
+		}
+		//verify password length
+		if (request.body.password.length < 4) {
+			reply.statusCode = 400;
+			return { error: "Password must be at least 4 characters long" };
+		}
 		try {
 			const salt = await bcrypt.genSalt();
 			const hash = await bcrypt.hash(request.body.password, salt);
@@ -37,6 +53,7 @@ async function routes(fastify, options) {
 				"INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
 				[request.body.username, request.body.email, hash]
 			);
+			reply.statusCode = 201; // created
 			return { id: result.lastID };
 		} catch (error) {
 			console.error("Error creating user: " + error.message);
@@ -56,7 +73,7 @@ async function routes(fastify, options) {
 		}
 		try {
 			const result = await fastify.sqlite.get(
-				"SELECT id, password_hash FROM users WHERE email = ?",
+				"SELECT id, password_hash, username, blocked_users, friends FROM users WHERE email = ?",
 				[request.body.email]
 			);
 			if (!result) {
@@ -75,11 +92,16 @@ async function routes(fastify, options) {
 				{
 					id: result.id,
 					email: request.body.email,
-					username: request.body.username,
+					username: result.username,
 				},
-				{ expiresIn: "1h" }
+				{ expiresIn: "8h" }
 			);
-			return { id: result.id, token: token };
+			return {
+				id: result.id,
+				token: token,
+				blocked_users: result.blocked_users,
+				friends: result.friends,
+			};
 		} catch (error) {
 			reply.statusCode = 500;
 			console.error("Error logging in: " + error.message);
@@ -104,6 +126,8 @@ async function routes(fastify, options) {
 	// google auth
 	async function verifyGoogleToken(token) {
 		const GOOGLE_PUBLIC_KEY_URL = "https://www.googleapis.com/oauth2/v1/certs";
+		const GOOGLE_APP_CLIENT_ID =
+			"244561649148-pbll9pc66oig5mcul4ivjp9igql4emef.apps.googleusercontent.com";
 		try {
 			// Fetch Google's public keys
 			const response = await fetch(GOOGLE_PUBLIC_KEY_URL);
@@ -119,7 +143,15 @@ async function routes(fastify, options) {
 
 			// Verify the token
 			const verifiedToken = jwt.verify(token, key, { algorithms: ["RS256"] });
-
+			if (verifiedToken.aud !== GOOGLE_APP_CLIENT_ID) {
+				throw new Error("Invalid client ID");
+			}
+			if (
+				verifiedToken.iss !== "accounts.google.com" &&
+				verifiedToken.iss !== "https://accounts.google.com"
+			) {
+				throw new Error("Invalid issuer");
+			}
 			return verifiedToken;
 		} catch (error) {
 			console.error("Google token verification failed:", error);
@@ -139,7 +171,62 @@ async function routes(fastify, options) {
 			return { error: "Invalid token" };
 		}
 		console.log("Google auth succes: ", verifiedToken);
-		return { message: "Google auth succes" };
+		try {
+			const result = await fastify.sqlite.get(
+				"SELECT id, google_sign_in, username, blocked_users, friends FROM users WHERE email = ?",
+				[verifiedToken.email]
+			);
+			if (result) {
+				if (!result.google_sign_in) {
+					reply.statusCode = 409;
+					return { error: "User already exists" };
+				} else {
+					const token = fastify.jwt.sign(
+						{
+							id: result.id,
+							email: verifiedToken.email,
+							username: result.username,
+						},
+						{ expiresIn: "8h" }
+					);
+					return {
+						id: result.id,
+						token: token,
+						blocked_users: result.blocked_users,
+						friends: result.friends,
+					};
+				}
+			} else {
+				// user does not exist -> create user in db
+				const result = await fastify.sqlite.run(
+					"INSERT INTO users (username, email, google_sign_in) VALUES (?, ?, ?)",
+					[
+						verifiedToken.name || verifiedToken.given_name,
+						verifiedToken.email,
+						1,
+					]
+				);
+				const token = fastify.jwt.sign(
+					{
+						id: result.lastID,
+						email: verifiedToken.email,
+						username: verifiedToken.name || verifiedToken.given_name,
+					},
+					{ expiresIn: "8h" }
+				);
+				reply.statusCode = 201; // created
+				return {
+					id: result.lastID,
+					token: token,
+					blocked_users: null,
+					friends: null,
+				};
+			}
+		} catch (error) {
+			console.error("Error google sign in: " + error.message);
+			reply.statusCode = 500;
+			return { error: "Error logging in" };
+		}
 	});
 }
 
