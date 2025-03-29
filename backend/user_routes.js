@@ -520,6 +520,35 @@ async function routes(fastify, options) {
 			}
 		}
 	);
+
+	// search user by username
+	fastify.get(
+		"/search/:username",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			if (!request.params.username) {
+				reply.statusCode = 400;
+				return { error: "Missing required fields" };
+			}
+			try {
+				const result = await fastify.sqlite.all(
+					"SELECT id, username, email FROM users WHERE username LIKE ?",
+					["%" + request.params.username + "%"]
+				);
+				if (!result) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				return result;
+			} catch (error) {
+				reply.statusCode = 500;
+				console.error("Error searching user: " + error.message);
+				return { error: "Error searching user" };
+			}
+		}
+	);
 }
 
 module.exports = routes;

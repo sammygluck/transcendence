@@ -297,6 +297,31 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "search/user",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{bearertoken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:3000/search/2",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"search",
+						"2"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [
@@ -324,7 +349,7 @@
 	"variable": [
 		{
 			"key": "bearertoken",
-			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwidXNlcm5hbWUiOiJKb2VyaSIsImlhdCI6MTc0MjY1NjY1MywiZXhwIjoxNzQyNjg1NDUzfQ.jYJMVZzTiA_1A2o6YMsKw-0rCTHWdhaG0FmOpYlNQIk",
+			"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJ0ZXN0QHRlc3QuY29tIiwidXNlcm5hbWUiOiJqb2VyaTEyMyIsImlhdCI6MTc0MzI1MzY1OCwiZXhwIjoxNzQzMjgyNDU4fQ.YVVunlpqKe1YUTY0jCzGXTY_bYkVm2C8g3sLLoiwy4Q",
 			"type": "string"
 		}
 	]
