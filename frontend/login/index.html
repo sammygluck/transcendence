@@ -90,14 +90,14 @@
             if (response.ok) {
                 message.style.color = "green";
                 message.textContent = isLogin ? "Login successful!" : "Signup successful!";
-                sessionStorage.setItem("userInfo", JSON.stringify(data));
+                localStorage.setItem("userInfo", JSON.stringify(data));
             } else {
 				message.style.color = "red";
                 message.textContent = data.message || (isLogin ? "Login failed!" : "Signup failed!");
             }
         }
         function logout(){
-            sessionStorage.removeItem("userInfo");
+            localStorage.removeItem("userInfo");
         }
     </script>
 </body>

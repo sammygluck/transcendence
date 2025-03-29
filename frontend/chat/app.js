@@ -1,4 +1,10 @@
-const ws = new WebSocket(`ws://${window.location.host}/chat`);
+const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+if (!userInfo) {
+	window.location.href = "/login";
+}
+const ws = new WebSocket(
+	`ws://${window.location.host}/chat?token=${userInfo.token}`
+);
 const messages = document.getElementById("messages");
 const messageInput = document.getElementById("messageInput");
 const sendButton = document.getElementById("sendButton");
@@ -17,8 +23,14 @@ ws.onerror = (error) => {
 	console.error("WebSocket error:", error);
 };
 
-ws.onclose = () => {
-	console.log("Disconnected from the server");
+ws.onclose = (e) => {
+	if (e.code === 4000) {
+		console.log("No token provided");
+	} else if (e.code === 4001) {
+		console.log("Invalid token");
+	} else {
+		console.log("Disconnected from the server");
+	}
 };
 
 sendButton.onclick = () => {

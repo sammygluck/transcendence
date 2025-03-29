@@ -3,6 +3,7 @@ const secret = "superSecretStringForJWT"; // move to .env file
 // required modules
 const fastify = require("fastify")({ logger: true }); // Require the framework and instantiate it
 const path = require("node:path");
+const jwt = require("jsonwebtoken");
 
 // Register the plugins
 fastify.register(require("@fastify/websocket"));
@@ -27,48 +28,58 @@ fastify.register(require("./user_routes"));
 
 // websocket route
 fastify.register(async function (fastify) {
-	fastify.get(
-		"/ws",
-		{ websocket: true /*, onRequest: [fastify.authenticate]*/ },
-		(socket, req) => {
-			socket.on("message", (message) => {
-				console.log("ws message: ", message.toString());
-			});
-			console.log("ws connection established");
-			let id = setInterval(() => {
-				socket.send(Date.now());
-			}, 5000);
-			socket.on("close", () => {
-				clearInterval(id);
-				console.log("ws connection closed");
-			});
-		}
-	);
+	fastify.get("/ws", { websocket: true }, (socket, req) => {
+		socket.on("message", (message) => {
+			console.log("ws message: ", message.toString());
+		});
+		console.log("ws connection established");
+		let id = setInterval(() => {
+			socket.send(Date.now());
+		}, 5000);
+		socket.on("close", () => {
+			clearInterval(id);
+			console.log("ws connection closed");
+		});
+	});
 });
 
 // websocket chat route
 const chatClients = new Set();
 fastify.register(async function (fastify) {
-	fastify.get(
-		"/chat",
-		{ websocket: true /*onRequest: [fastify.authenticate]*/ },
-		(socket, req) => {
-			socket.on("message", (message) => {
-				console.log("chat message: ", message.toString());
-				for (const client of chatClients) {
-					if (client.readyState === WebSocket.OPEN) {
-						client.send(message.toString());
-					}
-				}
-			});
-			chatClients.add(socket);
-			console.log("client connected to chat");
-			socket.on("close", () => {
-				chatClients.delete(socket);
-				console.log("client disconnected from chat");
-			});
+	fastify.get("/chat", { websocket: true }, (socket, req) => {
+		// authenticate the user
+		const token = req.query.token;
+		if (!token) {
+			socket.close(4000, "No token provided");
+			return;
 		}
-	);
+		jwt.verify(token, secret, (err, decoded) => {
+			if (err) {
+				socket.close(4001, "Invalid token");
+				return;
+			}
+			socket.user = decoded;
+		});
+		if (!socket.user) {
+			return;
+		}
+		// add the socket to the chat clients set
+		chatClients.add(socket);
+		console.log("client connected to chat");
+		// handle events
+		socket.on("message", (message) => {
+			console.log("chat message: ", message.toString());
+			for (const client of chatClients) {
+				if (client.readyState === WebSocket.OPEN) {
+					client.send(message.toString());
+				}
+			}
+		});
+		socket.on("close", () => {
+			chatClients.delete(socket);
+			console.log("client disconnected from chat");
+		});
+	});
 });
 
 // Run the server!
