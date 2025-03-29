@@ -8,6 +8,7 @@ const ws = new WebSocket(
 const messages = document.getElementById("messages");
 const messageInput = document.getElementById("messageInput");
 const sendButton = document.getElementById("sendButton");
+const userIdDestination = document.getElementById("userIdDestination");
 
 ws.onopen = () => {
 	console.log("Connected to the server");
@@ -15,7 +16,7 @@ ws.onopen = () => {
 
 ws.onmessage = (event) => {
 	const message = document.createElement("div");
-	message.textContent = event.data;
+	message.textContent = JSON.parse(event.data).message;
 	messages.appendChild(message);
 };
 
@@ -35,6 +36,17 @@ ws.onclose = (e) => {
 
 sendButton.onclick = () => {
 	const message = messageInput.value;
-	ws.send(message);
+	ws.send(
+		JSON.stringify({ message: message, userId: userIdDestination.value })
+	);
 	messageInput.value = "";
+};
+messageInput.onkeydown = (event) => {
+	if (event.key === "Enter") {
+		const message = messageInput.value;
+		ws.send(
+			JSON.stringify({ message: message, userId: userIdDestination.value })
+		);
+		messageInput.value = "";
+	}
 };

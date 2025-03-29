@@ -67,12 +67,70 @@ fastify.register(async function (fastify) {
 		chatClients.add(socket);
 		console.log("client connected to chat");
 		// handle events
-		socket.on("message", (message) => {
-			console.log("chat message: ", message.toString());
-			for (const client of chatClients) {
-				if (client.readyState === WebSocket.OPEN) {
-					client.send(message.toString());
+		socket.on("message", (wsMessage) => {
+			try {
+				const messageObject = JSON.parse(wsMessage);
+				const message = messageObject.message;
+				const userId = messageObject.userId;
+				console.log("chat message: ", message.toString());
+				if (userId) {
+					// send the message to the specific user
+					let found = false;
+					for (const client of chatClients) {
+						if (
+							parseInt(client.user.id) === parseInt(userId) &&
+							client.readyState === WebSocket.OPEN
+						) {
+							found = true;
+							client.send(
+								JSON.stringify({
+									message:
+										"[" + socket.user.username + "]: " + message.toString(),
+									type: "private",
+								})
+							);
+						}
+					}
+					// send a message back to the sender
+					if (found) {
+						socket.send(
+							JSON.stringify({
+								message:
+									"[" + socket.user.username + "]: " + message.toString(),
+								type: "private",
+							})
+						);
+					} else {
+						// send a message back to the sender that the user is not found
+						socket.send(
+							JSON.stringify({
+								message: "[Server]: User not found",
+								type: "server",
+							})
+						);
+					}
+				} else {
+					// send the message to all clients
+					for (const client of chatClients) {
+						if (client.readyState === WebSocket.OPEN) {
+							client.send(
+								JSON.stringify({
+									message:
+										"[" + socket.user.username + "]: " + message.toString(),
+									type: "public",
+								})
+							);
+						}
+					}
 				}
+			} catch (e) {
+				socket.send(
+					JSON.stringify({
+						message: "[Server]: Invalid message format",
+						type: "server",
+					})
+				);
+				console.log("Invalid message format: ", e);
 			}
 		});
 		socket.on("close", () => {
