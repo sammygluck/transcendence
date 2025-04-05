@@ -5,6 +5,8 @@ const fastify = require("fastify")({ logger: true }); // Require the framework a
 const path = require("node:path");
 const jwt = require("jsonwebtoken");
 
+const pong_server = require("./pong_server");
+
 // Register the plugins
 fastify.register(require("@fastify/websocket"));
 fastify.register(require("./plugins/sqlite-connector"));
@@ -137,6 +139,31 @@ fastify.register(async function (fastify) {
 			chatClients.delete(socket);
 			console.log("client disconnected from chat");
 		});
+	});
+});
+
+// game websocket route
+fastify.register(async function (fastify) {
+	fastify.get("/game", { websocket: true }, (socket, req) => {
+		// authenticate the user
+		const token = req.query.token;
+		if (!token) {
+			socket.close(4000, "No token provided");
+			return;
+		}
+		jwt.verify(token, secret, (err, decoded) => {
+			if (err) {
+				socket.close(4001, "Invalid token");
+				return;
+			}
+			socket.user = decoded;
+			socket.user.type = "both"; // testing
+		});
+		if (!socket.user) {
+			return;
+		}
+		pong_server.game.addSocket(socket);
+		console.log("client connected to game");
 	});
 });
 

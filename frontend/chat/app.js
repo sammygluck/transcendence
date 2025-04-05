@@ -1,4 +1,8 @@
-const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+const userInfoStr = localStorage.getItem("userInfo");
+if (!userInfoStr) {
+	window.location.href = "/login";
+}
+const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
 if (!userInfo) {
 	window.location.href = "/login";
 }
