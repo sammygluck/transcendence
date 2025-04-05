@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const fetch = require("node-fetch");
 const path = require("node:path");
 const fs = require("node:fs/promises");
+const mime = require("mime");
 
 async function routes(fastify, options) {
 	fastify.get(
@@ -604,6 +605,49 @@ async function routes(fastify, options) {
 				console.error("Error uploading avatar: " + error.message);
 				reply.statusCode = 500;
 				return { error: "Error uploading avatar" };
+			}
+		}
+	);
+
+	// get avatar picture
+	fastify.get(
+		"/avatar/:id",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			if (!request.params.id) {
+				reply.statusCode = 400;
+				return { error: "Missing required fields" };
+			}
+			try {
+				const result = await fastify.sqlite.get(
+					"SELECT avatar FROM users WHERE id = ?",
+					[request.params.id]
+				);
+				if (!result) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				if (!result.avatar) {
+					reply.statusCode = 404;
+					return { error: "Avatar not found" };
+				}
+				const filePath = path.join(__dirname, "uploads", result.avatar);
+				try {
+					const file = await fs.readFile(filePath);
+					const mimeType = mime.getType(filePath) || "application/octet-stream";
+					reply.type(mimeType);
+					return reply.send(file);
+				} catch (error) {
+					console.error("Error reading avatar file: " + error.message);
+					reply.statusCode = 404;
+					return { error: "Avatar not found" };
+				}
+			} catch (error) {
+				console.error("Error getting avatar: " + error.message);
+				reply.statusCode = 500;
+				return { error: "Error getting avatar" };
 			}
 		}
 	);

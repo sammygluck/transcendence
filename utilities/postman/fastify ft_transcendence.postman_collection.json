@@ -322,6 +322,65 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "avatar",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{bearertoken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "localhost:3000/avatar",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"avatar"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "avatar",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{bearertoken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "localhost:3000/avatar/1",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"avatar",
+						"1"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [
