@@ -132,3 +132,4 @@ dist
 # sqlite
 *.db
 *.sqlite
+backend/uploads

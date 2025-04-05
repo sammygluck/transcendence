@@ -19,6 +19,7 @@ fastify.register(require("@fastify/static"), {
 	//prefix: "/public/", // optional: default '/'
 });
 fastify.register(require("@fastify/formbody")); // parse x-www-form-urlencoded bodies
+fastify.register(require("@fastify/multipart")); // parse multipart/form-data bodies (picture upload)
 
 //subfiles for routes
 fastify.register(require("./user_routes"));

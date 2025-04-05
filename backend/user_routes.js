@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const fetch = require("node-fetch");
+const path = require("node:path");
+const fs = require("node:fs/promises");
 
 async function routes(fastify, options) {
 	fastify.get(
@@ -546,6 +548,62 @@ async function routes(fastify, options) {
 				reply.statusCode = 500;
 				console.error("Error searching user: " + error.message);
 				return { error: "Error searching user" };
+			}
+		}
+	);
+
+	// avatar (picture upload)
+	fastify.post(
+		"/avatar",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			const options = { limits: { fileSize: 5 * 1024 * 1024 } };
+			const data = await request.file(options); // this gets the first file only
+			const buffer = await data.toBuffer();
+			if (!data) {
+				reply.statusCode = 400;
+				return { error: "Missing required fields" };
+			}
+			// check if the file is an image
+			const mimeTypes = ["image/jpeg", "image/png", "image/gif"];
+			if (!mimeTypes.includes(data.mimetype)) {
+				reply.statusCode = 400;
+				return { error: "Invalid file type" };
+			}
+			try {
+				const uploadDir = path.join(__dirname, "uploads");
+				// check if the directory exists, if not create it
+				try {
+					await fs.stat(uploadDir);
+				} catch {
+					console.log("Creating upload directory: " + uploadDir);
+					await fs.mkdir(uploadDir);
+				}
+				const filename = request.user.id + "." + data.mimetype.split("/")[1]; // create a filename based on user id
+				const filePath = path.join(uploadDir, filename);
+				await fs.writeFile(filePath, buffer);
+				// update the user avatar in the database
+				const updated_at = new Date()
+					.toISOString()
+					.slice(0, 19)
+					.replace("T", " ");
+				const result = await fastify.sqlite.run(
+					"UPDATE users SET avatar = ?, updated_at = ? WHERE id = ?",
+					[filename, updated_at, request.user.id]
+				);
+				if (result.changes === 0) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				// return the filename to the client
+				reply.statusCode = 201; // created
+				return { filename: filename };
+			} catch (error) {
+				console.error("Error uploading avatar: " + error.message);
+				reply.statusCode = 500;
+				return { error: "Error uploading avatar" };
 			}
 		}
 	);
