@@ -1,17 +1,45 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const chatHeader = document.getElementById("chat-header");
   const chatContent = document.getElementById("chat-content");
   const userProfile = document.getElementById("user-profile");
 
-  // Mock data
-  const userData = {
-    username: "YourUsername",
-    profileLink: "/profile/yourusername",
-    friends: [
-      { username: "Friend1", profileLink: "/profile/friend1" },
-      { username: "Friend2", profileLink: "/profile/friend2" },
-    ],
-  };
+  // Fetch user data from the server
+  let userData;
+  try {
+    const response = await fetch("/currentuser", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error("Failed to fetch user data");
+    }
+    userData = await response.json();
+
+    if (userData.friends) {
+      const friendDetails = await Promise.all(
+        userData.friends.map(async (friend) => {
+          const friendResponse = await fetch(`/user/${friend.id}`, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+          if (!friendResponse.ok) {
+            console.error(`Failed to fetch data for friend ID: ${friend.id}`);
+            return { id: friend.id, username: "Unknown" };
+          }
+          return await friendResponse.json();
+        })
+      );
+      userData.friends = friendDetails;
+    }
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    alert("Failed to load user data. Please try again later.");
+    return;
+  }
 
   // Initialize chat block
   function initializeChat() {
@@ -19,13 +47,13 @@ document.addEventListener("DOMContentLoaded", () => {
     userProfile.href = "#";
     userProfile.onclick = (e) => {
       e.preventDefault();
-      loadProfile(userData.profileLink, userData.username);
+      loadProfile(userData.id, userData.username);
     };
     displayFriendsList();
   }
 
   // Reset header with optional back button, title, and link
-  function resetHeader(backAction, title = userData.username, link = userData.profileLink, isLink = true) {
+  function resetHeader(backAction, username = userData.username, isLink = true) {
     chatHeader.innerHTML = "";
     if (backAction) {
       const backButton = document.createElement("button");
@@ -35,24 +63,24 @@ document.addEventListener("DOMContentLoaded", () => {
       backButton.onclick = backAction;
       chatHeader.appendChild(backButton);
     }
-    const headerElement = createHeaderElement(title, link, isLink);
+    const headerElement = createHeaderElement(username, isLink);
     chatHeader.appendChild(headerElement);
   }
 
   // Create a header element (link or plain text)
-  function createHeaderElement(text, href, isLink) {
+  function createHeaderElement(username, isLink) {
     if (isLink) {
       const link = document.createElement("a");
       link.href = "#";
-      link.textContent = text;
+      link.textContent = username;
       link.onclick = (e) => {
         e.preventDefault();
-        loadProfile(href, text);
+        loadProfile(userData.id, username);
       };
       return link;
     } else {
       const span = document.createElement("span");
-      span.textContent = text;
+      span.textContent = username;
       return span;
     }
   }
@@ -64,33 +92,33 @@ document.addEventListener("DOMContentLoaded", () => {
       <input id="search-bar" type="text" placeholder="Search friends..." style="width: 100%; margin-bottom: 10px;" />
       <div id="friend-list"></div>
     `;
-    const newSearchBar = document.getElementById("search-bar");
-    const newFriendList = document.getElementById("friend-list");
+    const searchBar = document.getElementById("search-bar");
+    const friendList = document.getElementById("friend-list");
 
-    newSearchBar.oninput = () => {
-      const query = newSearchBar.value.toLowerCase();
+    searchBar.oninput = () => {
+      const query = searchBar.value.toLowerCase();
       const matchingFriends = userData.friends.filter((friend) =>
         friend.username.toLowerCase().includes(query)
       );
       if (matchingFriends.length > 0) {
-        updateFriendList(matchingFriends, newFriendList);
+        updateFriendList(matchingFriends, friendList);
       } else {
-        displayDummyFriend(newSearchBar.value, newFriendList);
+        displayDummyFriend(searchBar.value, friendList);
       }
     };
 
-    updateFriendList(userData.friends, newFriendList);
+    updateFriendList(userData.friends, friendList);
   }
 
   // Update the friend list dynamically
-  function updateFriendList(friends, friendListElement) {
+  function updateFriendList(friendsArray, friendListElement) {
     friendListElement.innerHTML = ""; // Clear the list
 
-    friends.forEach((friend) => {
+    friendsArray.forEach((friend) => {
       const friendElement = document.createElement("div");
       friendElement.className = "friend";
       friendElement.textContent = friend.username;
-      friendElement.addEventListener("click", () => openChat(friend.username, friend.profileLink));
+      friendElement.addEventListener("click", () => openChat(friend.username));
       friendListElement.appendChild(friendElement);
     });
   }
@@ -108,24 +136,148 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Open chat with a friend
-  function openChat(username, profileLink) {
-    resetHeader(displayFriendsList, username, profileLink, true); // Update header with friend's username and profile link
-    chatContent.innerHTML = `<p>Chat with ${username}...</p>`;
+  function openChat(username) {
+    resetHeader(displayFriendsList, username, true); // Update header with friend's username and profile link
+    chatContent.textContent = `Chat with ${username}...`;
   }
 
   // Load profile into the chat container
-  function loadProfile(profileLink, username) {
-    resetHeader(displayFriendsList, username, null, false); // Update header with friend's username (no link)
-    chatContent.innerHTML = `<p>Loading profile from ${profileLink}...</p>`;
-    setTimeout(() => {
-      chatContent.innerHTML = `<p>Profile content for ${username}</p>`;
-    }, 1000);
+  function loadProfile(userid, username) {
+    resetHeader(displayFriendsList, username, false); // Update header with friend's username (no link)
+    chatContent.textContent = `Loading profile for ${username}...`;
+
+    // Fetch profile data from the server
+    fetch(`/user/${userid}`, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch profile data");
+        }
+        return response.json();
+      })
+      .then((profileData) => {
+        // Display profile data
+        chatContent.innerHTML = `
+          <h2>${profileData.username}</h2>
+          <img src="${profileData.avatar || 'default-avatar.png'}" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%;">
+          <p>Email: ${profileData.email}</p>
+          <p>Friends: ${profileData.friends ? profileData.friends.map(f => f.username).join(', ') : 'No friends yet'}</p>
+          <p>Blocked Users: ${profileData.blocked_users ? profileData.blocked_users.map(b => b.username).join(', ') : 'None'}</p>
+        `;
+      })
+      .catch((error) => {
+        console.error("Error loading profile:", error);
+        chatContent.textContent = "Failed to load profile. Please try again later.";
+      });
   }
 
-  // Send friend request (mock function)
+  // Send friend request
   function sendFriendRequest(username) {
-    alert(`Friend request sent to ${username}`);
+    fetch("/friend", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ friendId: username }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to send friend request");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        alert(`Friend request sent to ${username}`);
+      })
+      .catch((error) => {
+        console.error("Error sending friend request:", error);
+        alert("Failed to send friend request. Please try again later.");
+      });
   }
 
   initializeChat();
+});
+
+
+/*=== Live Chat ===*/
+/*
+ * Not yet tested or functional, just some mock code to show how it might look.
+ */
+
+document.addEventListener("DOMContentLoaded", async () => {
+  // Initialize live chat functionality
+  function initializeLiveChat() {
+    const messageInput = document.getElementById("message-in");
+    const sendButton = document.getElementById("send-button");
+    const liveChatContent = document.getElementById("live-chat-content");
+    // Function to send a message
+    async function sendMessage() {
+      const message = messageInput.value.trim();
+      if (!message) return;
+      try {
+        const response = await fetch("/livechat/send", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ message }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to send message");
+        }
+        const sentMessage = await response.json();
+        displayMessage(sentMessage, "outgoing");
+        messageInput.value = ""; // Clear input field
+      } catch (error) {
+        console.error("Error sending message:", error);
+        alert("Failed to send message. Please try again.");
+      }
+    }
+    // Function to display a message in the live chat
+    function displayMessage(messageData, type) {
+      const messageElement = document.createElement("div");
+      messageElement.className = `message ${type}`;
+      messageElement.textContent = `${type === "incoming" ? messageData.sender : "You"}: ${messageData.message}`;
+      liveChatContent.insertBefore(messageElement, liveChatContent.firstChild);
+    }
+    // Function to fetch and display incoming messages
+    async function fetchMessages() {
+      try {
+        const response = await fetch("/livechat/messages", {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch messages");
+        }
+        const messages = await response.json();
+        messages.forEach((msg) => displayMessage(msg, "incoming"));
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    }
+    // Event listener for the send button
+    sendButton.addEventListener("click", sendMessage);
+    // Event listener for pressing Enter in the input field
+    messageInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+    // Poll for new messages every 5 seconds
+    setInterval(fetchMessages, 5000);
+    // Initial fetch of messages
+    fetchMessages();
+  };
+
+  initializeLiveChat();
 });

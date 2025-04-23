@@ -8,14 +8,15 @@
     /* Basic styling for the chat block */
     #chat-block {
       position: fixed;
-      bottom: 0;
-      right: 0;
-      width: 300px;
-      height: 400px;
+      bottom: 5%;
+      left: 50%;
+      transform: translate(-50%);
+      width: 66.67%; /* 2/3 of the window width */
+      height: 400px; /* Fixed height */
       border: 1px solid #ccc;
       background-color: #f9f9f9;
       display: flex;
-      flex-direction: column;
+      flex-direction: row; /* Place live-chat and friend-chat side by side */
     }
     #chat-header {
       background-color: #007bff;
@@ -27,7 +28,6 @@
     #chat-content {
       flex: 1;
       overflow-y: auto;
-      padding: 10px;
     }
     .friend {
 	  cursor: pointer; /* Change cursor to pointer on hover */
@@ -44,22 +44,81 @@
       top: 50%;
       transform: translateY(-50%);
     }
+    #message-io {
+      position: absolute;
+      bottom: 0; /* Align to the bottom */
+      left: 0; /* Align to the left edge of the parent */
+      right: 0; /* Align to the right edge of the parent */
+      display: flex;
+      gap: 10px; /* Add spacing between input and button */
+      padding: 10px; /* Add padding around the message container */
+      border-top: 1px solid #ddd; /* Add a top border to separate from messages */
+      box-sizing: border-box; /* Include padding and border in the width */
+    }
+    #message-in {
+      flex: 1; /* Allow the input to take up available space */
+    }
+    #send-button {
+      flex-shrink: 0; /* Prevent the button from shrinking */
+    }
+    #live-chat {
+      flex: 2; /* Take up 2/3 of the width */
+      display: flex;
+      flex-direction: column; /* Maintain column layout inside */
+      border: 1px solid #ddd; /* Add a small border */
+      padding: 10px; /* Add inner padding */
+      box-sizing: border-box; /* Ensure padding doesn't affect width/height */
+      position: relative; /* Make this the positioning context for #message-io */
+    }
+    #friend-chat {
+      flex: 1; /* Take up 1/3 of the width */
+      display: flex;
+      flex-direction: column; /* Maintain column layout inside */
+      border: 1px solid #ddd; /* Add a small border */
+      padding: 10px; /* Add inner padding */
+      box-sizing: border-box; /* Ensure padding doesn't affect width/height */
+    }
+    #live-chat-content {
+      flex: 1; /* Allow the content to take up available space */
+      display: flex;
+      flex-direction: column;
+    }
+    #search-bar {
+      width: 100%;
+      margin: 10px 0;
+      box-sizing: border-box; /* Ensure padding and borders are included in the width */
+    }
   </style>
 </head>
 <body>
   <div id="chat-block">
-    <div id="chat-header">
-      <a id="user-profile" href="#">Your Username</a>
+    <div id="live-chat">
+      <h3 style="margin: 0;">Live Chat</h3>
+      <div id="live-chat-content">
+        <!-- Live chat messages will be dynamically populated -->
+        <div id="message-io">
+          <input
+            id="message-in"
+            type="text"
+            placeholder="Type a message..."
+          />
+          <button id="send-button">Send</button>
+        </div>
+      </div>
     </div>
-    <div id="chat-content">
-      <input
-        id="search-bar"
-        type="text"
-        placeholder="Search friends..."
-        style="width: 100%; margin-bottom: 10px;"
-      />
-      <!-- Friends list or chat content will be dynamically populated -->
-      <div id="friend-list"></div>
+    <div id="friend-chat">
+      <div id="chat-header">
+        <a id="user-profile" href="#">Your Username</a>
+      </div>
+      <div id="chat-content">
+        <input
+          id="search-bar"
+          type="text"
+          placeholder="Search friends..."
+        />
+        <!-- Friends list or chat content will be dynamically populated -->
+        <div id="friend-list"></div>
+      </div>
     </div>
   </div>
 
