@@ -91,6 +91,7 @@
                 message.style.color = "green";
                 message.textContent = isLogin ? "Login successful!" : "Signup successful!";
                 localStorage.setItem("userInfo", JSON.stringify(data));
+                localStorage.setItem("token", data.token);
             } else {
 				message.style.color = "red";
                 message.textContent = data.message || (isLogin ? "Login failed!" : "Signup failed!");
@@ -98,6 +99,7 @@
         }
         function logout(){
             localStorage.removeItem("userInfo");
+            localStorage.removeItem("token");
         }
     </script>
 </body>
