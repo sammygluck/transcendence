@@ -4,6 +4,7 @@ const fetch = require("node-fetch");
 const path = require("node:path");
 const fs = require("node:fs/promises");
 const mime = require("mime");
+const nodemailer = require("nodemailer");
 
 async function routes(fastify, options) {
 	fastify.get(
@@ -99,14 +100,45 @@ async function routes(fastify, options) {
 		}
 	});
 
+	let twoFactorWaiting = []; // [{id: 1, code: 21687, timestamp: 1745488464000, attempts: 0}]
+	function sendTwoFactorEmail(address, code){
+		// Create a transporter
+		const transporter = nodemailer.createTransport({
+			service: "gmail",
+			auth: {
+				user: "joerinijs19@gmail.com", // your Gmail address
+				pass: "sdih giov wilj nwco", // use an App Password (not your Gmail password)
+			},
+		});
+
+		// Set up email data
+		const mailOptions = {
+			from: "joerinijs19@gmail.com",
+			to: address,
+			subject: "ft_transcendence login code",
+			text: "Use this code to login: " + code,
+		};
+
+		// Send the email
+		transporter.sendMail(mailOptions, (error, info) => {
+			if (error) {
+				return console.log("Error sending email:", error);
+			}
+			console.log("Email sent:", info.response);
+		});
+	}
+
 	fastify.post("/login", async (request, reply) => {
+		// filter out expired codes or codes with too may attempts from twoFactorWaiting
+		twoFactorWaiting = twoFactorWaiting.filter(obj => Date.now() - obj.timestamp < 10 * 60 * 1000); // test
+		twoFactorWaiting = twoFactorWaiting.filter(obj => obj.attempts < 5);
 		if (!request.body.email || !request.body.password) {
 			reply.statusCode = 400;
 			return { error: "Missing required fields" };
 		}
 		try {
 			const result = await fastify.sqlite.get(
-				"SELECT id, password_hash, username, blocked_users, friends FROM users WHERE email = ?",
+				"SELECT id, email, password_hash, two_factor_auth, username, blocked_users, friends FROM users WHERE email = ?",
 				[request.body.email]
 			);
 			if (!result) {
@@ -121,6 +153,37 @@ async function routes(fastify, options) {
 				reply.statusCode = 401;
 				return { error: "Invalid password" };
 			}
+			if (request.body.twoFactorCode && result.two_factor_auth) {
+				// check if 2fa code is correct
+				const found = twoFactorWaiting.find(obj => obj.id === result.id);
+				console.log(found);
+				if (!found)
+				{
+					reply.statusCode = 401;
+					return { error: "2 factor authentication failed" };
+				}
+				found.attempts++;
+				if (found.code !== request.body.twoFactorCode){
+					reply.statusCode = 401;
+					return { error: "2 factor authentication failed" };
+				}
+			}
+			else if (result.two_factor_auth)
+			{
+				// delete curent user from twoFactorWaiting
+				twoFactorWaiting = twoFactorWaiting.filter(obj => obj.id !== result.id);
+				let code = Math.floor(10000 + Math.random() * 10000);
+				twoFactorWaiting.push({id: result.id, code: code, timestamp: Date.now(), attempts: 0});
+				console.log(twoFactorWaiting);
+				sendTwoFactorEmail(result.email, code);
+				return {
+					id: result.id,
+					message: "Enter two factor code"
+				}
+			}
+			// delete curent user from twoFactorWaiting
+			twoFactorWaiting = twoFactorWaiting.filter(obj => obj.id !== result.id);
+			console.log(twoFactorWaiting);
 			const token = fastify.jwt.sign(
 				{
 					id: result.id,

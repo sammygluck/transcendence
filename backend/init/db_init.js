@@ -16,6 +16,7 @@ db.run(
 	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
 	google_sign_in BOOLEAN DEFAULT FALSE,
+	two_factor_auth	BOOLEAN DEFAULT FALSE,
 	blocked_users TEXT DEFAULT NULL,
 	friends TEXT DEFAULT NULL,
 	avatar TEXT DEFAULT NULL
