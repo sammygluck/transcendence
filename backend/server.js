@@ -22,7 +22,7 @@ fastify.register(require("@fastify/formbody")); // parse x-www-form-urlencoded b
 fastify.register(require("@fastify/multipart")); // parse multipart/form-data bodies (picture upload)
 
 //subfiles for routes
-fastify.register(require("./user_routes"));
+fastify.register(require("./user_routes").routes);
 
 // Declare a route
 /*fastify.get("/", function handler(request, reply) {
@@ -47,7 +47,7 @@ fastify.register(async function (fastify) {
 });
 
 // websocket chat route
-const chatClients = new Set();
+const chatClients = require("./user_routes").chatClients; // import the chatClients set from user_routes.js
 fastify.register(async function (fastify) {
 	fastify.get("/chat", { websocket: true }, (socket, req) => {
 		// authenticate the user
@@ -169,7 +169,7 @@ fastify.register(async function (fastify) {
 });
 
 // Run the server!
-fastify.listen({ port: 3000, /*host: "0.0.0.0"*/ }, (err) => {
+fastify.listen({ port: 3000 /*host: "0.0.0.0"*/ }, (err) => {
 	if (err) {
 		fastify.log.error(err);
 		process.exit(1);

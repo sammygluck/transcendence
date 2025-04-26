@@ -6,13 +6,15 @@ const fs = require("node:fs/promises");
 const mime = require("mime");
 const nodemailer = require("nodemailer");
 
+const chatClients = new Set();
 async function routes(fastify, options) {
 	fastify.get(
 		"/user/:id",
 		{
-			onRequest: [fastify.authenticate],
+			//onRequest: [fastify.authenticate],
 		},
 		async (request, reply) => {
+			console.log(chatClients);
 			try {
 				const result = await fastify.sqlite.get(
 					"SELECT users.id, users.username, users.email, users.created_at, users.updated_at, users.friends, users.avatar FROM users WHERE id = ?",
@@ -21,6 +23,15 @@ async function routes(fastify, options) {
 				if (!result) {
 					reply.statusCode = 404;
 					return { error: "User not found" };
+				}
+				//online status
+				const online = Array.from(chatClients).find(
+					(client) => client.user.id.toString() === request.params.id
+				);
+				if (online) {
+					result.online = true;
+				} else {
+					result.online = false;
 				}
 				return result;
 			} catch (error) {
@@ -101,7 +112,7 @@ async function routes(fastify, options) {
 	});
 
 	let twoFactorWaiting = []; // [{id: 1, code: 21687, timestamp: 1745488464000, attempts: 0}]
-	function sendTwoFactorEmail(address, code){
+	function sendTwoFactorEmail(address, code) {
 		// Create a transporter
 		const transporter = nodemailer.createTransport({
 			service: "gmail",
@@ -130,8 +141,10 @@ async function routes(fastify, options) {
 
 	fastify.post("/login", async (request, reply) => {
 		// filter out expired codes or codes with too may attempts from twoFactorWaiting
-		twoFactorWaiting = twoFactorWaiting.filter(obj => Date.now() - obj.timestamp < 10 * 60 * 1000); // test
-		twoFactorWaiting = twoFactorWaiting.filter(obj => obj.attempts < 5);
+		twoFactorWaiting = twoFactorWaiting.filter(
+			(obj) => Date.now() - obj.timestamp < 10 * 60 * 1000
+		); // test
+		twoFactorWaiting = twoFactorWaiting.filter((obj) => obj.attempts < 5);
 		if (!request.body.email || !request.body.password) {
 			reply.statusCode = 400;
 			return { error: "Missing required fields" };
@@ -155,34 +168,38 @@ async function routes(fastify, options) {
 			}
 			if (request.body.twoFactorCode && result.two_factor_auth) {
 				// check if 2fa code is correct
-				const found = twoFactorWaiting.find(obj => obj.id === result.id);
+				const found = twoFactorWaiting.find((obj) => obj.id === result.id);
 				console.log(found);
-				if (!found)
-				{
+				if (!found) {
 					reply.statusCode = 401;
 					return { error: "2 factor authentication failed" };
 				}
 				found.attempts++;
-				if (found.code !== request.body.twoFactorCode){
+				if (found.code !== request.body.twoFactorCode) {
 					reply.statusCode = 401;
 					return { error: "2 factor authentication failed" };
 				}
-			}
-			else if (result.two_factor_auth)
-			{
+			} else if (result.two_factor_auth) {
 				// delete curent user from twoFactorWaiting
-				twoFactorWaiting = twoFactorWaiting.filter(obj => obj.id !== result.id);
+				twoFactorWaiting = twoFactorWaiting.filter(
+					(obj) => obj.id !== result.id
+				);
 				let code = Math.floor(10000 + Math.random() * 10000);
-				twoFactorWaiting.push({id: result.id, code: code, timestamp: Date.now(), attempts: 0});
+				twoFactorWaiting.push({
+					id: result.id,
+					code: code,
+					timestamp: Date.now(),
+					attempts: 0,
+				});
 				console.log(twoFactorWaiting);
 				sendTwoFactorEmail(result.email, code);
 				return {
 					id: result.id,
-					message: "Enter two factor code"
-				}
+					message: "Enter two factor code",
+				};
 			}
 			// delete curent user from twoFactorWaiting
-			twoFactorWaiting = twoFactorWaiting.filter(obj => obj.id !== result.id);
+			twoFactorWaiting = twoFactorWaiting.filter((obj) => obj.id !== result.id);
 			console.log(twoFactorWaiting);
 			const token = fastify.jwt.sign(
 				{
@@ -716,4 +733,5 @@ async function routes(fastify, options) {
 	);
 }
 
-module.exports = routes;
+module.exports.routes = routes;
+module.exports.chatClients = chatClients;
