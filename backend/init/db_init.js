@@ -7,6 +7,8 @@ const db = new sqlite3.Database("db.sqlite", (err) => {
 	}
 });
 
+//friends is a json array, for example  '["2", "3", "5", "7"]'
+
 db.run(
 	`CREATE TABLE IF NOT EXISTS users (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,6 +29,36 @@ db.run(
 		}
 	}
 );
+
+db.run(`
+	CREATE TABLE IF NOT EXISTS game_history (
+    gameId INTEGER PRIMARY KEY AUTOINCREMENT,
+    started TIMESTAMP NOT NULL,
+    winnerId INTEGER NOT NULL,
+    loserId INTEGER NOT NULL,
+    scoreWinner INTEGER NOT NULL,
+    scoreLoser INTEGER NOT NULL,
+    tournamentId INTEGER,
+    FOREIGN KEY (winnerId) REFERENCES users(id),
+    FOREIGN KEY (loserId) REFERENCES users(id),
+    FOREIGN KEY (tournamentId) REFERENCES tournament(tournamentId)
+)`)
+
+//players is a json array, for example  '["2", "3", "5", "7"]'
+
+db.run(`
+	CREATE TABLE IF NOT EXISTS tournament (
+    tournamentId INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    creator INTEGER NOT NULL,
+    players TEXT NOT NULL, -- JSON string representing an array of userIds
+    scoreToWin INTEGER NOT NULL,
+    winnerId INTEGER,
+    timestamp TIMESTAMP NOT NULL,
+    FOREIGN KEY (creator) REFERENCES users(id),
+    FOREIGN KEY (winnerId) REFERENCES users(id)
+);`
+)
 
 db.close((err) => {
 	if (err) {
