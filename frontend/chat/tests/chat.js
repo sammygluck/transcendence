@@ -19,8 +19,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (userData.friends) {
       const friendDetails = await Promise.all(
-        userData.friends.map(async (friend) => {
-          const friendResponse = await fetch(`/user/${friend.id}`, {
+        JSON.parse(userData.friends).map(async (id) => {
+          const friendResponse = await fetch(`/user/${id}`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -165,8 +165,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           <h2>${profileData.username}</h2>
           <img src="${profileData.avatar || 'default-avatar.png'}" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%;">
           <p>Email: ${profileData.email}</p>
-          <p>Friends: ${profileData.friends ? profileData.friends.map(f => f.username).join(', ') : 'No friends yet'}</p>
-          <p>Blocked Users: ${profileData.blocked_users ? profileData.blocked_users.map(b => b.username).join(', ') : 'None'}</p>
+          <p>Friends: ${profileData.friends ? JSON.parse(profileData.friends).map(f => f).join(', ') : 'No friends yet'}</p>
+          <p>Blocked Users: ${profileData.blocked_users ? JSON.parse(profileData.blocked_users).map(b => b).join(', ') : 'None'}</p>
         `;
       })
       .catch((error) => {
