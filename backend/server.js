@@ -6,6 +6,7 @@ const path = require("node:path");
 const jwt = require("jsonwebtoken");
 
 const pong_server = require("./pong_server");
+const game_management = require("./game_management");
 
 // Register the plugins
 fastify.register(require("@fastify/websocket"));
@@ -150,11 +151,13 @@ fastify.register(async function (fastify) {
 		const token = req.query.token;
 		if (!token) {
 			socket.close(4000, "No token provided");
+			console.log("Websocket game: No token provided");
 			return;
 		}
 		jwt.verify(token, secret, (err, decoded) => {
 			if (err) {
 				socket.close(4001, "Invalid token");
+				console.log("Websocket game: Invalid token");
 				return;
 			}
 			socket.user = decoded;
@@ -163,7 +166,8 @@ fastify.register(async function (fastify) {
 		if (!socket.user) {
 			return;
 		}
-		pong_server.game.addSocket(socket);
+		//pong_server.game.addSocket(socket);
+		game_management.addSocket(socket); // add the socket to the game clients set
 		console.log("client connected to game");
 	});
 });
