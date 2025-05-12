@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Profile Popup</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Background overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 100vw;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .overlay.active {
+      display: flex;
+    }
+
+    /* Modal content */
+    .modal {
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .modal h2 {
+      margin-top: 0;
+    }
+
+    .modal .close {
+      position: absolute;
+      top: 0.5rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 1rem;
+    }
+
+    .info {
+      margin-bottom: 1rem;
+    }
+
+    .info strong {
+      display: inline-block;
+      width: 100px;
+    }
+
+    .stats {
+      border-top: 1px solid #ddd;
+      margin-top: 1rem;
+      padding-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <button onclick="openProfile()">View User Profile</button>
+
+  <div class="overlay" id="profileModal">
+    <div class="modal">
+      <button class="close" onclick="closeProfile()">&times;</button>
+      <img src="https://via.placeholder.com/80" alt="Avatar" class="avatar">
+      <h2>@johndoe</h2>
+      <div class="info">
+        <div><strong>Name:</strong> John Doe</div>
+        <div><strong>Email:</strong> john@example.com</div>
+        <div><strong>Status:</strong> Online</div>
+      </div>
+      <div class="stats">
+        <div><strong>Wins:</strong> 12</div>
+        <div><strong>Losses:</strong> 5</div>
+        <div><strong>Match History:</strong></div>
+        <ul>
+          <li>vs Alice - Won - 2024-04-12</li>
+          <li>vs Bob - Lost - 2024-04-10</li>
+          <li>vs Claire - Won - 2024-04-08</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openProfile() {
+      document.getElementById('profileModal').classList.add('active');
+    }
+
+    function closeProfile() {
+      document.getElementById('profileModal').classList.remove('active');
+    }
+  </script>
+
+</body>
+</html>

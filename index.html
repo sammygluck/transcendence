@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile Popup Sandbox</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <select id="userSelect" disabled>
+    <option>Loading users…</option>
+  </select>
+  <button id="loadBtn" disabled>Load User</button>
+
+  <div class="overlay" id="profileOverlay">
+    <div class="modal">
+      <button class="close" onclick="closeModal()">&times;</button>
+
+      <!-- Avatar + file input (shown only in edit) -->
+      <img id="avatar" class="avatar" src="https://via.placeholder.com/80" alt="Avatar">
+      <!-- the <input type="file"> will be injected here by JS in edit mode -->
+
+      <h2 id="username">@username</h2>
+
+      <div class="public-info">
+        <div><strong>Alias:</strong> <span id="alias"></span></div>
+      </div>
+
+      <div class="private-info" id="privateInfo">
+        <div><strong>Full Name:</strong> <span id="fullName"></span></div>
+        <div><strong>Email:</strong>     <span id="email"></span></div>
+        <div><strong>Created:</strong>   <span id="created"></span></div>
+        <div><strong>Online:</strong>    <span id="online"></span></div>
+      </div>
+
+      <footer>
+        <button id="editBtn"   class="btn">Edit</button>
+        <button id="saveBtn"   class="btn" style="display:none">Save</button>
+        <button id="cancelBtn" class="btn" style="display:none">Cancel</button>
+      </footer>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
