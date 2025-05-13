@@ -9,15 +9,15 @@ fastify.register(async function (fastify) {
         connection.socket.on('message', async (wsmessage) => {
             try {
                 const parsedMessage = JSON.parse(wsmessage);
-                const userId = parsedMessage.userId;
+                const destId = parsedMessage.destId;
                 const content = parsedMessage.message;
 
-                if (userId === 0) {
+                if (destId === 0) {
                     // Handle live chat message
                     broadcastToLiveChat(content);
                 } else {
                     // Handle direct message
-                    const destinationUser = await findUserById(destinationId);
+                    const destinationUser = await findUserById(destId);
                     if (!destinationUser) {
                         connection.socket.send(JSON.stringify({ error: 'User is offline.' }));
                         return;
@@ -35,7 +35,7 @@ fastify.register(async function (fastify) {
 function broadcastToLiveChat(content) {
     for (const client of chatClients) {
         if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ message: '[' + socket.user.username + "]: " + content }));
+            client.send(JSON.stringify({ message: '[' + socket.user.username + "]: " + content, type: "public" }));
         }
     }
 }
@@ -48,11 +48,10 @@ async function findUserById(userId) {
     }
 }
 
-function sendDirectMessage(user, content) {
-    // ...existing code to send a direct message to a specific user...
+function sendDirectMessage(client, content) {
+    client.send(JSON.stringify({ sendId: socket.user.id, message: "[" + socket.user.username + "]: " + content, type: "private"}));
+    socket.send(JSON.stringify({ sendId: client.user.id, message: "[" + socket.user.username + "]: " + content, type: "private"}));
 }
-
-// ...existing code...
 
 fastify.listen({ port: 3000 }, (err, address) => {
     if (err) {

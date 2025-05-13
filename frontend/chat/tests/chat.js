@@ -41,6 +41,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  console.log(friendDetails);
+
   // Initialize chat block
   function initializeChat() {
     userProfile.textContent = userData.username;

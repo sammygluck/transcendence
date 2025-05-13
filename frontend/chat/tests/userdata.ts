@@ -1,19 +1,20 @@
 interface User {
-	id: string;
+	id: number;
 	username: string;
 	email: string;
 	created_at: string;
 	updated_at: string;
-	blocked_users: string[] | null;
-	friends: string[] | null;
+	blocked_users: string[] | null;	//Change to number[] later
+	friends: string[] | null; 		//Change to number[] later
 	avatar: string | null;
     online: boolean;
 }
 
 interface Friend {
-	id: string;
+	id: number;
 	username: string;
 	online: boolean;
+	message_history: string[] | null;
 }
 
 let currentUser: User | null = null;
