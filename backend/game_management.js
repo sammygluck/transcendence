@@ -1,4 +1,5 @@
 const { type } = require("os");
+const WebSocket = require('ws');
 
 let clients = [];
 let openTournaments = [];

@@ -4,6 +4,7 @@ const secret = "superSecretStringForJWT"; // move to .env file
 const fastify = require("fastify")({ logger: true }); // Require the framework and instantiate it
 const path = require("node:path");
 const jwt = require("jsonwebtoken");
+const WebSocket = require('ws');
 
 const pong_server = require("./pong_server");
 const game_management = require("./game_management");
