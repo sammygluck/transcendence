@@ -92,6 +92,7 @@ fastify.register(async function (fastify) {
 									message:
 										"[" + socket.user.username + "]: " + message.toString(),
 									type: "private",
+									destId: socket.user.id
 								})
 							);
 						}
