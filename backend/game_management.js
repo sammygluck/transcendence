@@ -1,5 +1,5 @@
 const { type } = require("os");
-const WebSocket = require('ws');
+const WebSocket = require("ws");
 
 let clients = [];
 let openTournaments = [];
@@ -80,141 +80,137 @@ function addSocket(socket) {
 	};
 }
 
-function startTournament()
-{
-	if (currentTournament)
-	{
+function startTournament() {
+	if (currentTournament) {
 		//game already in progress
-		return ;
-	}
-	else if (waitingTournaments.length > 0)
-	{
+		return;
+	} else if (waitingTournaments.length > 0) {
 		// take first one from list
 		currentTournament = waitingTournaments[0];
-	}
-	else if (openTournaments.length > 0)
-	{
+	} else if (openTournaments.length > 0) {
 		let firstTimeStamp = 9999999999999;
 		let index = -1;
-		for (let i = 0 ; i < openTournaments.length ; i++ )
-		{
-			if (openTournaments[i].started && openTournaments[i].startTime < firstTimeStamp)
-			{
+		for (let i = 0; i < openTournaments.length; i++) {
+			if (
+				openTournaments[i].started &&
+				openTournaments[i].startTime < firstTimeStamp
+			) {
 				firstTimeStamp = openTournaments[i].startTime;
 				index = i;
 			}
-			if (index >= 0)
-			{
+			if (index >= 0) {
 				// insert in database and update id here
 				currentTournament = openTournaments[index];
 				waitingTournaments.push(currentTournament);
 				openTournaments.splice(index, 1); // remove 1 element at index
-
 			}
 		}
 	}
 }
 
-function endTournament()
-{
-	if (!currentTournament)
-	{
-		return ;
-	}
-	else
-	{
+function endTournament() {
+	if (!currentTournament) {
+		return;
+	} else {
 		// database update?
 		// announce tournament winner
-		broadcast({ type: "tournamentWinner", data:  currentTournament.winner});
+		broadcast({ type: "tournamentWinner", data: currentTournament.winner });
 		// should be the first element in game array, remove first elememt
 		waitingTournaments.unshift();
 		currentTournament = null;
-
 	}
 }
 
-function tournamentNextMatch()
-{
-	if (!currentTournament)
-	{
-		return ;
+function tournamentNextMatch() {
+	if (!currentTournament) {
+		return;
 	}
-	if (currentTournament.matches.length)
-	{
+	if (currentTournament.matches.length) {
 		//finish current match
-		let currentMatch = currentTournament.matches[currentTournament.matches.length - 1];
+		let currentMatch =
+			currentTournament.matches[currentTournament.matches.length - 1];
 		currentMatch.round = currentTournament.round;
-		if (currentMatch.player1.score > currentMatch.player2.score)
-		{
+		if (currentMatch.player1.score > currentMatch.player2.score) {
 			currentMatch.winner = currentMatch.player1.id;
 			currentTournament.playersNextRound.push(...currentMatch.player1);
-		}
-		else
-		{
+		} else {
 			currentMatch.winner = currentMatch.player2.id;
 			currentTournament.playersNextRound.push(...currentMatch.player2);
 		}
 	}
 	//next match
-	if (currentTournament.playersCurrentRound.length + currentTournament.playersNextRound.length < 2)
-	{
+	if (
+		currentTournament.playersCurrentRound.length +
+			currentTournament.playersNextRound.length <
+		2
+	) {
 		//tournament is finished
 		if (currentTournament.playersCurrentRound.length)
 			currentTournament.winner = currentTournament.playersCurrentRound[0].id;
-		else
-			currentTournament.winner = currentTournament.playersNextRound[0];
+		else currentTournament.winner = currentTournament.playersNextRound[0];
 		endTournament();
-		return ;
+		return;
 	}
 	let numberOfPlayers = 0;
 	let currentMatch = null;
-	while (numberOfPlayers < 2 && currentTournament.playersCurrentRound.length > 0)
-	{
-		let index = Math.floor(Math.random() * currentTournament.playersCurrentRound.length);
-		if (!numberOfPlayers)
-		{
-			currentMatch = { player1: { ...currentTournament.playersCurrentRound[index], score: 0}, player2: null}
+	while (
+		numberOfPlayers < 2 &&
+		currentTournament.playersCurrentRound.length > 0
+	) {
+		let index = Math.floor(
+			Math.random() * currentTournament.playersCurrentRound.length
+		);
+		if (!numberOfPlayers) {
+			currentMatch = {
+				player1: { ...currentTournament.playersCurrentRound[index], score: 0 },
+				player2: null,
+			};
 			currentTournament.matches.push(currentMatch);
 			numberOfPlayers++;
-		}
-		else
-		{
-			currentMatch.player2 = {...currentTournament.playersCurrentRound[index], score: 0};
+		} else {
+			currentMatch.player2 = {
+				...currentTournament.playersCurrentRound[index],
+				score: 0,
+			};
 			currentMatch.round = currentTournament.round;
-			
 		}
 		//remove player from playersCurrentRound
 		currentTournament.playersCurrentRound.splice(index, 1); // remove 1 element at index
-
 	}
-	if (numberOfPlayers < 2 && currentTournament.playersCurrentRound.length === 0)
-	{
+	if (
+		numberOfPlayers < 2 &&
+		currentTournament.playersCurrentRound.length === 0
+	) {
 		currentTournament.playersCurrentRound = currentTournament.playersNextRound;
 		currentTournament.playersNextRound = [];
 		currentTournament.round++;
 	}
-	while (numberOfPlayers < 2 && currentTournament.playersCurrentRound.length > 0)
-	{
-		let index = Math.floor(Math.random() * currentTournament.playersCurrentRound.length);
-		if (!numberOfPlayers)
-		{
-			currentMatch = { player1: { ...currentTournament.playersCurrentRound[index], score: 0}, player2: null}
+	while (
+		numberOfPlayers < 2 &&
+		currentTournament.playersCurrentRound.length > 0
+	) {
+		let index = Math.floor(
+			Math.random() * currentTournament.playersCurrentRound.length
+		);
+		if (!numberOfPlayers) {
+			currentMatch = {
+				player1: { ...currentTournament.playersCurrentRound[index], score: 0 },
+				player2: null,
+			};
 			currentTournament.matches.push(currentMatch);
 			numberOfPlayers++;
-		}
-		else
-		{
-			currentMatch.player2 = {...currentTournament.playersCurrentRound[index], score: 0};
+		} else {
+			currentMatch.player2 = {
+				...currentTournament.playersCurrentRound[index],
+				score: 0,
+			};
 			currentMatch.round = currentTournament.round;
-			
 		}
 		//remove player from playersCurrentRound
 		currentTournament.playersCurrentRound.splice(index, 1); // remove 1 element at index
-
 	}
 	broadcast({ type: "nextMatch", data: currentMatch });
 }
-
 
 module.exports = {
 	addSocket,
@@ -248,10 +244,25 @@ currentTournament = {
 		{ id: 8, name: "Dave" },
 	],
 	matches: [
-		{ player1: { id: 1, name: "Alice", score: 10 }, player2: { id: 2, name: "Bob", score: 6 }, winner: 1, round: 1 },
-		{ player1: { id: 3, name: "Carol", score: 2 }, player2: { id: 4, name: "Dave", score: 10 }, winner: 4, round: 1 },
-		{ player1: { id: 5, name: "Alice" }, player2:{ id: 8, name: "Dave" }, winner: null, round: 2 }, // not played yet
-	]
+		{
+			player1: { id: 1, name: "Alice", score: 10 },
+			player2: { id: 2, name: "Bob", score: 6 },
+			winner: 1,
+			round: 1,
+		},
+		{
+			player1: { id: 3, name: "Carol", score: 2 },
+			player2: { id: 4, name: "Dave", score: 10 },
+			winner: 4,
+			round: 1,
+		},
+		{
+			player1: { id: 5, name: "Alice" },
+			player2: { id: 8, name: "Dave" },
+			winner: null,
+			round: 2,
+		}, // not played yet
+	],
 	/*
 	rounds: [
 		{
