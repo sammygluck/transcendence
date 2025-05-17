@@ -33,7 +33,7 @@ db.run(
 db.run(`
 	CREATE TABLE IF NOT EXISTS game_history (
     gameId INTEGER PRIMARY KEY AUTOINCREMENT,
-    started TIMESTAMP NOT NULL,
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     winnerId INTEGER NOT NULL,
     loserId INTEGER NOT NULL,
     scoreWinner INTEGER NOT NULL,
@@ -42,7 +42,7 @@ db.run(`
     FOREIGN KEY (winnerId) REFERENCES users(id),
     FOREIGN KEY (loserId) REFERENCES users(id),
     FOREIGN KEY (tournamentId) REFERENCES tournament(tournamentId)
-)`)
+)`);
 
 //players is a json array, for example  '["2", "3", "5", "7"]'
 
@@ -54,11 +54,10 @@ db.run(`
     players TEXT NOT NULL, -- JSON string representing an array of userIds
     scoreToWin INTEGER NOT NULL,
     winnerId INTEGER,
-    timestamp TIMESTAMP NOT NULL,
+    timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (creator) REFERENCES users(id),
     FOREIGN KEY (winnerId) REFERENCES users(id)
-);`
-)
+);`);
 
 db.close((err) => {
 	if (err) {

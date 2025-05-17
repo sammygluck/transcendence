@@ -7,7 +7,7 @@ const secret = "superSecretStringForJWT"; // move to .env file
 async function game_management(fastify) {
 	let clients = [];
 	let openTournaments = [];
-	let waitingTournaments = []; // started tournaments + regular games based on invites
+	let waitingGames = []; // regular games based on invites
 	let currentTournament = null; // current tournament in progress
 	let tournamentCounter = 0; // counter for tournament ids
 
@@ -94,6 +94,7 @@ async function game_management(fastify) {
 		console.log("client connected to game");
 	});
 
+	// tournament function
 	function broadcast(obj) {
 		const data = JSON.stringify(obj);
 		clients.forEach((client) => {
@@ -107,9 +108,9 @@ async function game_management(fastify) {
 		if (currentTournament) {
 			//game already in progress
 			return;
-		} else if (waitingTournaments.length > 0) {
-			// take first one from list
-			currentTournament = waitingTournaments[0];
+		} else if (waitingGames.length > 0) {
+			// take first one from invites list, and remove it from the list
+			currentTournament = waitingGames.shift();
 		} else if (openTournaments.length > 0) {
 			let firstTimeStamp = 9999999999999;
 			let index = -1;
@@ -123,8 +124,20 @@ async function game_management(fastify) {
 				}
 				if (index >= 0) {
 					// insert in database and update id here
+					const result = fastify.sqlite.run(
+						"INSERT INTO tournament (name, creator, players, scoreToWin) VALUES (?, ?, ?, ?)",
+						[
+							openTournaments[index].name,
+							openTournaments[index].creator.id,
+							JSON.stringify(openTournaments[index].players.map((p) => p.id)),
+							openTournaments[index].scoreToWin,
+						]
+					);
+					if (result) {
+						// update id with database id
+						openTournaments[index].id = result.lastID;
+					}
 					currentTournament = openTournaments[index];
-					waitingTournaments.push(currentTournament);
 					openTournaments.splice(index, 1); // remove 1 element at index
 				}
 			}
@@ -134,13 +147,20 @@ async function game_management(fastify) {
 	function endTournament() {
 		if (!currentTournament) {
 			return;
-		} else {
-			// database update?
+		} else if (!currentTournament.id) {
+			// regular game, not a tournament
+			currentTournament = null;
+		} else if (currentTournament.winner) {
+			// database update
+			fastify.sqlite.run(
+				"UPDATE tournament SET winnerId = ? WHERE tournamentId = ?",
+				[currentTournament.winner.id, currentTournament.id]
+			);
 			// announce tournament winner
 			broadcast({ type: "tournamentWinner", data: currentTournament.winner });
-			// should be the first element in game array, remove first elememt
-			waitingTournaments.unshift();
 			currentTournament = null;
+		} else {
+			console.log("Tournament is not finished yet");
 		}
 	}
 
@@ -154,12 +174,25 @@ async function game_management(fastify) {
 				currentTournament.matches[currentTournament.matches.length - 1];
 			currentMatch.round = currentTournament.round;
 			if (currentMatch.player1.score > currentMatch.player2.score) {
-				currentMatch.winner = currentMatch.player1.id;
+				currentMatch.winner = currentMatch.player1;
+				currentMatch.loser = currentMatch.player2;
 				currentTournament.playersNextRound.push(...currentMatch.player1);
 			} else {
-				currentMatch.winner = currentMatch.player2.id;
+				currentMatch.winner = currentMatch.player2;
+				currentMatch.loser = currentMatch.player1;
 				currentTournament.playersNextRound.push(...currentMatch.player2);
 			}
+			// insert into database
+			fastify.sqlite.run(
+				"INSERT INTO game_history (winnerId, loserId, scoreWinner, scoreLoser, tournamentId) VALUES (?, ?, ?, ?, ?)",
+				[
+					currentMatch.winner.id,
+					currentMatch.loser.id,
+					currentMatch.winner.score,
+					currentMatch.loser.score,
+					currentTournament.id,
+				]
+			);
 		}
 		//next match
 		if (
@@ -169,7 +202,7 @@ async function game_management(fastify) {
 		) {
 			//tournament is finished
 			if (currentTournament.playersCurrentRound.length)
-				currentTournament.winner = currentTournament.playersCurrentRound[0].id;
+				currentTournament.winner = currentTournament.playersCurrentRound[0];
 			else currentTournament.winner = currentTournament.playersNextRound[0];
 			endTournament();
 			return;
@@ -246,7 +279,7 @@ async function game_management(fastify) {
 	currentTournament = {
 		name: "Summer Cup",
 		creator: { id: "1", name: "Alice" },
-		id: "12345", // generate random id when creating a game, replace by database id when saving to db
+		id: "12345", // generate id when creating a game, replace by database id when saving to db
 		scoreToWin: 10,
 		type: "tournament", // tournament or invite
 		started: true,
@@ -267,13 +300,13 @@ async function game_management(fastify) {
 			{
 				player1: { id: 1, name: "Alice", score: 10 },
 				player2: { id: 2, name: "Bob", score: 6 },
-				winner: 1,
+				winner: { id: 1, name: "Alice", score: 10 },
 				round: 1,
 			},
 			{
 				player1: { id: 3, name: "Carol", score: 2 },
 				player2: { id: 4, name: "Dave", score: 10 },
-				winner: 4,
+				winner: { id: 4, name: "Dave", score: 10 },
 				round: 1,
 			},
 			{
