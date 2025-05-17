@@ -32,7 +32,7 @@ async function game_management(fastify) {
 			return;
 		}
 		clients.push(socket);
-		socket.onmessage = (message) => {
+		socket.onmessage = async (message) => {
 			const msg = JSON.parse(message.data);
 			console.log("Received message:", msg);
 			if (msg.type === "create_tournament") {
@@ -67,14 +67,16 @@ async function game_management(fastify) {
 				if (
 					tournament &&
 					tournament.creator.id === socket.user.id &&
-					!tournament.started
+					!tournament.started &&
+					tournament.players.length > 1
 				) {
 					tournament.started = true;
-					tournament.playersCurrentRound = tournament.players;
+					tournament.playersCurrentRound = tournament.players.slice(); // copy array
 					tournament.playersNextRound = [];
 					tournament.matches = [];
 					tournament.round = 1;
 					tournament.startTime = Date.now();
+					await startTournament();
 				}
 			} else if (msg.type === "list_tournaments") {
 				socket.send(
@@ -104,7 +106,7 @@ async function game_management(fastify) {
 		});
 	}
 
-	function startTournament() {
+	async function startTournament() {
 		if (currentTournament) {
 			//game already in progress
 			return;
@@ -124,7 +126,7 @@ async function game_management(fastify) {
 				}
 				if (index >= 0) {
 					// insert in database and update id here
-					const result = fastify.sqlite.run(
+					const result = await fastify.sqlite.run(
 						"INSERT INTO tournament (name, creator, players, scoreToWin) VALUES (?, ?, ?, ?)",
 						[
 							openTournaments[index].name,
@@ -142,29 +144,43 @@ async function game_management(fastify) {
 				}
 			}
 		}
+		if (currentTournament) {
+			//currentTournament.started = true;
+			//currentTournament.startTime = Date.now();
+			broadcast({ type: "tournamentStarted", data: currentTournament });
+			await tournamentNextMatch();
+		}
 	}
 
-	function endTournament() {
+	async function endTournament() {
 		if (!currentTournament) {
 			return;
 		} else if (!currentTournament.id) {
 			// regular game, not a tournament
+			console.log("Regular game finished");
 			currentTournament = null;
 		} else if (currentTournament.winner) {
 			// database update
-			fastify.sqlite.run(
+			await fastify.sqlite.run(
 				"UPDATE tournament SET winnerId = ? WHERE tournamentId = ?",
 				[currentTournament.winner.id, currentTournament.id]
 			);
 			// announce tournament winner
 			broadcast({ type: "tournamentWinner", data: currentTournament.winner });
+			console.log("Tournament finished");
+			currentTournament = null;
+		} else if (currentTournament.players.length === 0) {
+			console.log("Empty tournament");
 			currentTournament = null;
 		} else {
 			console.log("Tournament is not finished yet");
 		}
+		if (!currentTournament) {
+			await startTournament();
+		}
 	}
 
-	function tournamentNextMatch() {
+	async function tournamentNextMatch() {
 		if (!currentTournament) {
 			return;
 		}
@@ -176,14 +192,14 @@ async function game_management(fastify) {
 			if (currentMatch.player1.score > currentMatch.player2.score) {
 				currentMatch.winner = currentMatch.player1;
 				currentMatch.loser = currentMatch.player2;
-				currentTournament.playersNextRound.push(...currentMatch.player1);
+				currentTournament.playersNextRound.push({ ...currentMatch.player1 });
 			} else {
 				currentMatch.winner = currentMatch.player2;
 				currentMatch.loser = currentMatch.player1;
-				currentTournament.playersNextRound.push(...currentMatch.player2);
+				currentTournament.playersNextRound.push({ ...currentMatch.player2 });
 			}
 			// insert into database
-			fastify.sqlite.run(
+			await fastify.sqlite.run(
 				"INSERT INTO game_history (winnerId, loserId, scoreWinner, scoreLoser, tournamentId) VALUES (?, ?, ?, ?, ?)",
 				[
 					currentMatch.winner.id,
@@ -204,7 +220,7 @@ async function game_management(fastify) {
 			if (currentTournament.playersCurrentRound.length)
 				currentTournament.winner = currentTournament.playersCurrentRound[0];
 			else currentTournament.winner = currentTournament.playersNextRound[0];
-			endTournament();
+			await endTournament();
 			return;
 		}
 		let numberOfPlayers = 0;
@@ -225,7 +241,6 @@ async function game_management(fastify) {
 					player2: null,
 				};
 				currentTournament.matches.push(currentMatch);
-				numberOfPlayers++;
 			} else {
 				currentMatch.player2 = {
 					...currentTournament.playersCurrentRound[index],
@@ -235,6 +250,7 @@ async function game_management(fastify) {
 			}
 			//remove player from playersCurrentRound
 			currentTournament.playersCurrentRound.splice(index, 1); // remove 1 element at index
+			numberOfPlayers++;
 		}
 		if (
 			numberOfPlayers < 2 &&
@@ -261,7 +277,6 @@ async function game_management(fastify) {
 					player2: null,
 				};
 				currentTournament.matches.push(currentMatch);
-				numberOfPlayers++;
 			} else {
 				currentMatch.player2 = {
 					...currentTournament.playersCurrentRound[index],
@@ -271,12 +286,54 @@ async function game_management(fastify) {
 			}
 			//remove player from playersCurrentRound
 			currentTournament.playersCurrentRound.splice(index, 1); // remove 1 element at index
+			numberOfPlayers++;
 		}
-		broadcast({ type: "nextMatch", data: currentMatch });
+		if (currentMatch) {
+			broadcast({ type: "nextMatch", data: currentMatch });
+		}
 	}
 
+	async function addPoint(playerId) {
+		if (!currentTournament) {
+			return;
+		}
+		let currentMatch =
+			currentTournament.matches[currentTournament.matches.length - 1];
+		if (currentMatch) {
+			if (currentMatch.player1.id === playerId) {
+				currentMatch.player1.score += 1;
+			} else if (currentMatch.player2.id === playerId) {
+				currentMatch.player2.score += 1;
+			}
+			broadcast({ type: "gameUpdate", data: currentMatch });
+			if (
+				currentMatch.player1.score >= currentTournament.scoreToWin ||
+				currentMatch.player2.score >= currentTournament.scoreToWin
+			) {
+				await tournamentNextMatch();
+			}
+		}
+	}
+
+	//simulation
+	setInterval(() => {
+		if (currentTournament) {
+			// simulate game
+			let currentMatch =
+				currentTournament.matches[currentTournament.matches.length - 1];
+			if (currentMatch && currentMatch.player1 && currentMatch.player2) {
+				let random = Math.floor(Math.random() * 2);
+				if (random === 0) {
+					addPoint(currentMatch.player1.id);
+				} else {
+					addPoint(currentMatch.player2.id);
+				}
+			}
+		}
+	}, 2000); // every 2 seconds
+
 	// examples
-	currentTournament = {
+	/*currentTournament = {
 		name: "Summer Cup",
 		creator: { id: "1", name: "Alice" },
 		id: "12345", // generate id when creating a game, replace by database id when saving to db
@@ -331,8 +388,8 @@ async function game_management(fastify) {
 				{ player1: { id: 5, name: "Alice" }, player2:{ id: 8, name: "Dave" }, winner: null }, // not played yet
 			],
 		},
-	],*/
-	};
+	],
+	};*/
 }
 
 module.exports = game_management;
