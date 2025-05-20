@@ -14,7 +14,7 @@ interface Friend {
 	id: number;
 	username: string;
 	online: boolean;
-	message_history: string[] | null;
+	message_history?: string[] | null;
 }
 
 let currentUser: User | null = null;

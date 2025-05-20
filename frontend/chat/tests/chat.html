@@ -47,13 +47,11 @@
     #message-io {
       position: absolute;
       bottom: 0; /* Align to the bottom */
-      left: 0; /* Align to the left edge of the parent */
-      right: 0; /* Align to the right edge of the parent */
+      width: 100%;
       display: flex;
       gap: 10px; /* Add spacing between input and button */
-      padding: 10px; /* Add padding around the message container */
+      padding: 10px 0; /* Add padding around the message container */
       border-top: 1px solid #ddd; /* Add a top border to separate from messages */
-      box-sizing: border-box; /* Include padding and border in the width */
     }
     #message-in {
       flex: 1; /* Allow the input to take up available space */
@@ -83,6 +81,10 @@
       display: flex;
       flex-direction: column;
     }
+    #back-button {
+      cursor: pointer;
+      float: left;
+    }
     #search-bar {
       width: 100%;
       margin: 10px 0;
@@ -108,6 +110,7 @@
     </div>
     <div id="friend-chat">
       <div id="chat-header">
+        <button id="back-button"><</button>
         <a id="user-profile" href="#">Your Username</a>
       </div>
       <div id="chat-content">
@@ -122,6 +125,6 @@
     </div>
   </div>
 
-  <script src="chat.js"></script>
+  <script src="chatWSocket.js"></script>
 </body>
 </html>
