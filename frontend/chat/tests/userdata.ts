@@ -14,19 +14,19 @@ interface Friend {
 	id: number;
 	username: string;
 	online: boolean;
-	message_history: string[] | null;
+	message_history?: string[] | null;
 }
 
-let currentUser: User | null = null;
+let userData: User | null = null;
 let friendsList: Friend[] = [];
 
 /**
  * Fetches the current user's data and their friends' online status.
  */
-export async function fetchCurrentUserData(): Promise<void> {
+export async function fetchUserData(userID: number): Promise<void> {
 	try {
 		// Fetch current user data
-		const userResponse = await fetch("/currentuser", {
+		const userResponse = await fetch(`/user/${userID}`, {
 			method: "GET",
 			headers: {
 				Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -35,11 +35,11 @@ export async function fetchCurrentUserData(): Promise<void> {
 		if (!userResponse.ok) {
 			throw new Error(`Error fetching current user: ${userResponse.statusText}`);
 		}
-		currentUser = await userResponse.json();
+		userData = await userResponse.json();
 
 		// Fetch friends' data
-		if (currentUser && currentUser.friends) {
-			const friendsPromises = currentUser.friends.map(async (friendId) => {
+		if (userData && userData.friends) {
+			const friendsPromises = userData.friends.map(async (friendId) => {
 				const friendResponse = await fetch(`/user/${friendId}`, {
 					method: "GET",
 					headers: {
@@ -62,7 +62,7 @@ export async function fetchCurrentUserData(): Promise<void> {
 		} else {
 			friendsList = [];
 		}
-		console.log("Current user data fetched:", currentUser);
+		console.log("Current user data fetched:", userData);
 		console.log("Friends list updated:", friendsList);
 	} catch (error) {
 		console.error("Error fetching current user data:", error);
@@ -72,10 +72,10 @@ export async function fetchCurrentUserData(): Promise<void> {
 /**
  * Updates the friends list every 10 seconds to check for new friends and their online status.
  */
-export function updateUserData(): void {
+export function updateCurrentUserData(): void {
 	setInterval(async () => {
 		try {
-			await fetchCurrentUserData();
+			await fetchUserData(userInfo.id);
 		} catch (error) {
 			console.error("Error updating friends list:", error);
 		}

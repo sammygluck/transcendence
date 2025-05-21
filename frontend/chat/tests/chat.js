@@ -41,8 +41,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  console.log(friendDetails);
-
   // Initialize chat block
   function initializeChat() {
     userProfile.textContent = userData.username;
@@ -127,14 +125,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Display a dummy friend with a "Send Friend Request" button
   function displayDummyFriend(username, friendListElement) {
-    friendListElement.innerHTML = `
-      <div class="friend" style="position: relative;">
-        ${username}
-        <button style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);" onclick="sendFriendRequest('${username}')">
-          Send Friend Request
-        </button>
-      </div>
-    `;
+    const dummyFriend = document.createElement("div");
+    dummyFriend.className = "friend";
+    dummyFriend.textContent = username;
+    dummyFriend.innerHTML += `<button style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);" onclick="sendFriendRequest('${username}')"> Send Friend Request</button>`;
+    dummyFriend.appendChild(friendListElement);
   }
 
   // Open chat with a friend
@@ -210,7 +205,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 /*
  * Not yet tested or functional, just some mock code to show how it might look.
  */
-
+/*
 document.addEventListener("DOMContentLoaded", async () => {
   // Initialize live chat functionality
   function initializeLiveChat() {
@@ -283,3 +278,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   initializeLiveChat();
 });
+*/
