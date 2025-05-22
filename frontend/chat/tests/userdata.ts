@@ -1,4 +1,4 @@
-interface User {
+export interface User {
 	id: number;
 	username: string;
 	email: string;
@@ -6,24 +6,23 @@ interface User {
 	updated_at: string;
 	blocked_users: string[] | null;	//Change to number[] later
 	friends: string[] | null; 		//Change to number[] later
+	friendlist: Friend[];
 	avatar: string | null;
     online: boolean;
 }
 
-interface Friend {
+export interface Friend {
 	id: number;
 	username: string;
 	online: boolean;
-	message_history?: string[] | null;
+	message_history?: string[];
 }
 
-let userData: User | null = null;
-let friendsList: Friend[] = [];
 
 /**
- * Fetches the current user's data and their friends' online status.
+ * Fetches the user's data and their friends' username, chat history and online status.
  */
-export async function fetchUserData(userID: number): Promise<void> {
+export async function fetchUserData(userID: number): Promise<User | null> {
 	try {
 		// Fetch current user data
 		const userResponse = await fetch(`/user/${userID}`, {
@@ -33,9 +32,9 @@ export async function fetchUserData(userID: number): Promise<void> {
 			},
 		});
 		if (!userResponse.ok) {
-			throw new Error(`Error fetching current user: ${userResponse.statusText}`);
+			throw new Error(`Error fetching user: ${userResponse.statusText}`);
 		}
-		userData = await userResponse.json();
+		const userData : User = await userResponse.json();
 
 		// Fetch friends' data
 		if (userData && userData.friends) {
@@ -58,15 +57,29 @@ export async function fetchUserData(userID: number): Promise<void> {
 					online: friendData.online,
 				};
 			});
-			friendsList = await Promise.all(friendsPromises);
-		} else {
-			friendsList = [];
+			userData.friendlist = await Promise.all(friendsPromises);
+		} else if (!userData.friends) {
+			// If no friends, initialize friendlist as an empty array
+			userData.friendlist = [];
 		}
-		console.log("Current user data fetched:", userData);
-		console.log("Friends list updated:", friendsList);
+		console.log("UserID ",userID," data fetched:", userData);
+		console.log("Friends list updated:", userData.friendlist);
+		return userData;
 	} catch (error) {
-		console.error("Error fetching current user data:", error);
+		console.error("Error fetching user data:", error);
+		alert("Failed to load user data. Please try again later.");
 	}
+	return null; 
+}
+
+
+const userInfoStr = localStorage.getItem("userInfo");
+if (!userInfoStr) {
+	window.location.href = "/login";
+}
+const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+if (!userInfo) {
+	window.location.href = "/login";
 }
 
 /**

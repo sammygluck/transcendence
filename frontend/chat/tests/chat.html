@@ -110,18 +110,25 @@
       <div id="chat-header">
         <a id="user-profile" href="#">Your Username</a>
       </div>
+      <!-- Friends list or chat content will be dynamically populated -->
+      <div id="friend-list">
+        <input
+        id="search-bar"
+        Type="text"
+        placeholder="Search friends..."
+      />
+      </div>
       <div id="chat-content">
         <input
-          id="search-bar"
+          id="message-in"
           type="text"
-          placeholder="Search friends..."
+          placeholder="Type a message..."
         />
-        <!-- Friends list or chat content will be dynamically populated -->
-        <div id="friend-list"></div>
+        <button id="send-button">Send</button>
       </div>
     </div>
   </div>
 
-  <script src="chat.js"></script>
+  <script src="chatWSocket.js"></script>
 </body>
 </html>
