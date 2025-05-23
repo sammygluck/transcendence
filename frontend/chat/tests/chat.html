@@ -108,17 +108,19 @@
     </div>
     <div id="friend-chat">
       <div id="chat-header">
+        <button id="back-button"><</button>
         <a id="user-profile" href="#">Your Username</a>
       </div>
-      <!-- Friends list or chat content will be dynamically populated -->
-      <div id="friend-list">
+      <div id="friends">
         <input
         id="search-bar"
         Type="text"
         placeholder="Search friends..."
-      />
+        />
+      <!-- Friends list or chat content will be dynamically populated -->
+      <div id="friend-list"></div>
       </div>
-      <div id="chat-content">
+      <div id="chat-content" style="display: none;">
         <input
           id="message-in"
           type="text"
@@ -129,6 +131,6 @@
     </div>
   </div>
 
-  <script src="chatWSocket.js"></script>
+  <script type="module" src="chatWSocket.js"></script>
 </body>
 </html>

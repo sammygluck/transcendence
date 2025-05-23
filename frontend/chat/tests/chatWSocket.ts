@@ -1,4 +1,4 @@
-import {User, Friend, fetchUserData, updateCurrentUserData} from "./userdata.ts";
+import {User, Friend, fetchUserData, updateCurrentUserData} from "./userdata.js";
 
 const LChatContent = document.getElementById("live-chat-content") as HTMLElement;
 const LmessageIn = document.getElementById("live-message-in") as HTMLInputElement;
@@ -9,6 +9,7 @@ const messageIn = document.getElementById("message-in") as HTMLInputElement;
 const sendButton = document.getElementById("send-button") as HTMLButtonElement;
 
 const backButton = document.getElementById("back-button") as HTMLButtonElement;
+const friends = document.getElementById("friends") as HTMLElement;
 const searchBar = document.getElementById("search-bar") as HTMLInputElement;
 const friendList = document.getElementById("friend-list") as HTMLElement;
 
@@ -77,43 +78,39 @@ async function initializeChat(): Promise<void> {
     });
     chatContent.style.display = "none";
     backButton.style.display = "none";
-    friendList.style.display = "block";
+    friends.style.display = "block";
     updateCurrentUserData();
     displayFriendsList();
 }
 
 LsendButton.onclick = () => {
     const message = LmessageIn.value;
-    ws.send(
-        JSON.stringify({sendId: userInfo.id, message: message, destId: 0 })
-    );
+    if (message)
+        ws.send(JSON.stringify({sendId: userInfo.id, message: message, destId: 0 }));
     LmessageIn.value = "";
 }
 
 LmessageIn.onkeydown = (event) => {
     if (event.key === "Enter") {
         const message = LmessageIn.value;
-        ws.send(
-            JSON.stringify({sendId: userInfo.id, message: message, destId: 0 })
-        );
+        if (message)
+            ws.send(JSON.stringify({sendId: userInfo.id, message: message, destId: 0 }));
         LmessageIn.value = "";
     }
 }
 
 sendButton.onclick = () => {
     const message = messageIn.value;
-    ws.send(
-        JSON.stringify({sendId: userInfo.id, message: message, destId: selectedFriend })
-    );
+    if (message)
+        ws.send(JSON.stringify({sendId: userInfo.id, message: message, destId: selectedFriend }));
     messageIn.value = "";
 }
 
 messageIn.onkeydown = (event) => {
     if (event.key === "Enter") {
         const message = messageIn.value;
-        ws.send(
-            JSON.stringify({sendId: userInfo.id, message: message, destId: selectedFriend })
-        );
+        if (message)
+            ws.send(JSON.stringify({sendId: userInfo.id, message: message, destId: selectedFriend }));
         messageIn.value = "";
     }
 }
@@ -121,7 +118,7 @@ messageIn.onkeydown = (event) => {
 backButton.onclick = function () {
     chatContent.style.display = "none";
     backButton.style.display = "none";
-    friendList.style.display = "block";
+    friends.style.display = "block";
 
     selectedFriend = 0;
 	displayFriendsList();
@@ -132,12 +129,13 @@ function displayFriendsList() {
 
 	searchBar.oninput = () => {
 		const query = searchBar.value.toLowerCase();
+        if (query.length === 0) return;
 		const matchingFriends = currentUserData.friendlist.filter(friend =>
 			friend.username.toLowerCase().includes(query)
 		);
 		if (!matchingFriends.length) {
 			friendList.innerHTML = "<p>No friends found</p>"; // Change later to display dummy friend with option to send friend request
-		} else {
+        } else {
 			loadFriendList(matchingFriends);
 		}
 	}
@@ -160,7 +158,7 @@ function loadFriendList(friendsArray: Friend[] | null = null) {
 }
 
 function openChat(friendId: number) {
-    friendList.style.display = "none";
+    friends.style.display = "none";
     backButton.style.display = "block";
     chatContent.style.display = "block";
 

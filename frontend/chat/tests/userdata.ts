@@ -92,5 +92,5 @@ export function updateCurrentUserData(): void {
 		} catch (error) {
 			console.error("Error updating friends list:", error);
 		}
-	}, 10000);
+	}, 30000);
 }
