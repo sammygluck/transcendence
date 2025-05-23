@@ -55,7 +55,7 @@ fastify.register(async function (fastify) {
 function broadcastToLiveChat(content, socket) {
     for (const client of chatClients) {
         if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({ message: '[' + socket.user.username + "]: " + content.toString(), type: "public" }));
+            client.send(JSON.stringify({ sendId: socket.user.id, message: '[' + socket.user.username + "]: " + content.toString(), type: "public" }));
         }
     }
 }
