@@ -48,9 +48,9 @@ fastify.register(async function (fastify) {
 });
 
 // websocket chat route
-const chatClients = require("./user_routes").chatClients; // import the chatClients set from user_routes.js
+const chatClients = require('./user_routes').chatClients; // import the chatClients set from user_routes.js
 fastify.register(async function (fastify) {
-	fastify.get("/chat", { websocket: true }, (socket, req) => {
+	fastify.get('/chat', { websocket: true }, (socket, req) => {
 		// authenticate the user
 		const token = req.query.token;
 		if (!token) {
@@ -64,85 +64,59 @@ fastify.register(async function (fastify) {
 			}
 			socket.user = decoded;
 		});
-		if (!socket.user) {
-			return;
-		}
-		// add the socket to the chat clients set
+		if (!socket.user) return;
 		chatClients.add(socket);
-		console.log("client connected to chat");
-		// handle events
-		socket.on("message", (wsMessage) => {
+		console.log("Client connected to chat");
+		socket.on('message', async (wsmessage) => {
 			try {
-				const messageObject = JSON.parse(wsMessage);
-				const message = messageObject.message;
-				const userId = messageObject.userId;
-				console.log("chat message: ", message.toString());
-				if (userId) {
-					// send the message to the specific user
-					let found = false;
-					for (const client of chatClients) {
-						if (
-							parseInt(client.user.id) === parseInt(userId) &&
-							client.readyState === WebSocket.OPEN
-						) {
-							found = true;
-							client.send(
-								JSON.stringify({
-									message:
-										"[" + socket.user.username + "]: " + message.toString(),
-									type: "private",
-								})
-							);
-						}
-					}
-					// send a message back to the sender
-					if (found) {
-						socket.send(
-							JSON.stringify({
-								message:
-									"[" + socket.user.username + "]: " + message.toString(),
-								type: "private",
-							})
-						);
-					} else {
-						// send a message back to the sender that the user is not found
-						socket.send(
-							JSON.stringify({
-								message: "[Server]: User not found",
-								type: "server",
-							})
-						);
-					}
+				const parsedMessage = JSON.parse(wsmessage);
+				const destId = parsedMessage.destId;
+				const content = parsedMessage.message;
+
+				if (destId === 0) {
+					// Handle live chat message
+					broadcastToLiveChat(content, socket);
 				} else {
-					// send the message to all clients
-					for (const client of chatClients) {
-						if (client.readyState === WebSocket.OPEN) {
-							client.send(
-								JSON.stringify({
-									message:
-										"[" + socket.user.username + "]: " + message.toString(),
-									type: "public",
-								})
-							);
-						}
+					// Handle direct message
+					const destinationUser = await findUserById(destId);
+					if (!destinationUser) {
+						socket.send(JSON.stringify({ error: 'User is offline.' }));
+						return;
 					}
+					sendDirectMessage(destinationUser, content, socket);
 				}
 			} catch (e) {
-				socket.send(
-					JSON.stringify({
-						message: "[Server]: Invalid message format",
-						type: "server",
-					})
-				);
-				console.log("Invalid message format: ", e);
+				socket.send(JSON.stringify({ message: '[Server]: Invalid message format.' }));
 			}
 		});
-		socket.on("close", () => {
+		socket.on('close', () => {
 			chatClients.delete(socket);
-			console.log("client disconnected from chat");
+			console.log("Client disconnected from chat");
 		});
 	});
 });
+
+// Helper functions
+function broadcastToLiveChat(content, socket) {
+	for (const client of chatClients) {
+		if (client.readyState === WebSocket.OPEN) {
+			client.send(JSON.stringify({ message: '[' + socket.user.username + "]: " + content.toString(), type: "public" }));
+		}
+	}
+}
+
+async function findUserById(userId) {
+	for (const client of chatClients) {
+		if (parseInt(client.user.id) === parseInt(userId) && client.readyState === WebSocket.OPEN) {
+			return client;
+		}
+	}
+}
+
+function sendDirectMessage(client, content, socket) {
+	client.send(JSON.stringify({ sendId: socket.user.id, message: "[" + socket.user.username + "]: " + content.toString(), type: "private"}));
+	socket.send(JSON.stringify({ sendId: client.user.id, message: "[" + socket.user.username + "]: " + content.toString(), type: "private"}));
+}
 
 // game websocket route
 fastify.register(async function (fastify) {
