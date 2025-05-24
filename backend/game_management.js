@@ -341,34 +341,43 @@ async function game_management(fastify) {
 		type: "tournament", // tournament or invite
 		started: true,
 		startTime: 1747127100000, //epochtime
+		players: [
+			{ id: 1, username: "Alice" },
+			 { id: 2, username: "Bob" },
+			{ id: 3, username: "Carol" },
+			{ id: 4, username: "Dave" },
+			{ id: 5, username: "Alice" },
+			{ id: 6, username: "Bob" },
+			{ id: 7, username: "Carol" },
+			{ id: 8, username: "Dave" },]
 		playersCurrentRound: [
-			{ id: 1, name: "Alice" },
-			{ id: 2, name: "Bob" },
-			{ id: 3, name: "Carol" },
-			{ id: 4, name: "Dave" },
+			{ id: 1, username: "Alice" },
+			{ id: 2, username: "Bob" },
+			{ id: 3, username: "Carol" },
+			{ id: 4, username: "Dave" },
 		],
 		playersNextRound: [
-			{ id: 5, name: "Alice" },
-			{ id: 6, name: "Bob" },
-			{ id: 7, name: "Carol" },
-			{ id: 8, name: "Dave" },
+			{ id: 5, username: "Alice" },
+			{ id: 6, username: "Bob" },
+			{ id: 7, username: "Carol" },
+			{ id: 8, username: "Dave" },
 		],
 		matches: [
 			{
-				player1: { id: 1, name: "Alice", score: 10 },
-				player2: { id: 2, name: "Bob", score: 6 },
-				winner: { id: 1, name: "Alice", score: 10 },
+				player1: { id: 1, username: "Alice", score: 10 },
+				player2: { id: 2, username: "Bob", score: 6 },
+				winner: { id: 1, username: "Alice", score: 10 },
 				round: 1,
 			},
 			{
-				player1: { id: 3, name: "Carol", score: 2 },
-				player2: { id: 4, name: "Dave", score: 10 },
-				winner: { id: 4, name: "Dave", score: 10 },
+				player1: { id: 3, username: "Carol", score: 2 },
+				player2: { id: 4, username: "Dave", score: 10 },
+				winner: { id: 4, username: "Dave", score: 10 },
 				round: 1,
 			},
 			{
-				player1: { id: 5, name: "Alice" },
-				player2: { id: 8, name: "Dave" },
+				player1: { id: 5, username: "Alice" },
+				player2: { id: 8, username: "Dave" },
 				winner: null,
 				round: 2,
 			}, // not played yet
@@ -378,14 +387,14 @@ async function game_management(fastify) {
 		{
 			round: 1,
 			matches: [
-				{ player1: { id: 1, name: "Alice", score: 10 }, player2: { id: 2, name: "Bob", score: 6 }, winner: 1 },
-				{ player1: { id: 3, name: "Carol", score: 2 }, player2: { id: 4, name: "Dave", score: 10 }, winner: 4 },
+				{ player1: { id: 1, username: "Alice", score: 10 }, player2: { id: 2, username: "Bob", score: 6 }, winner: 1 },
+				{ player1: { id: 3, username: "Carol", score: 2 }, player2: { id: 4, username: "Dave", score: 10 }, winner: 4 },
 			],
 		},
 		{
 			round: 2,
 			matches: [
-				{ player1: { id: 5, name: "Alice" }, player2:{ id: 8, name: "Dave" }, winner: null }, // not played yet
+				{ player1: { id: 5, username: "Alice" }, player2:{ id: 8, username: "Dave" }, winner: null }, // not played yet
 			],
 		},
 	],
