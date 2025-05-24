@@ -76,6 +76,7 @@ fastify.register(async function (fastify) {
 				if (destId === 0) {
 					// Handle live chat message
 					broadcastToLiveChat(content, socket);
+
 				} else {
 					// Handle direct message
 					const destinationUser = await findUserById(destId);
@@ -119,29 +120,7 @@ function sendDirectMessage(client, content, socket) {
 }
 
 // game websocket route
-fastify.register(async function (fastify) {
-	fastify.get("/game", { websocket: true }, (socket, req) => {
-		// authenticate the user
-		const token = req.query.token;
-		if (!token) {
-			socket.close(4000, "No token provided");
-			return;
-		}
-		jwt.verify(token, secret, (err, decoded) => {
-			if (err) {
-				socket.close(4001, "Invalid token");
-				return;
-			}
-			socket.user = decoded;
-			socket.user.type = "both"; // testing
-		});
-		if (!socket.user) {
-			return;
-		}
-		pong_server.game.addSocket(socket);
-		console.log("client connected to game");
-	});
-});
+fastify.register(require("./game_management"));
 
 // Run the server!
 fastify.listen({ port: 3000 /*host: "0.0.0.0"*/ }, (err) => {
