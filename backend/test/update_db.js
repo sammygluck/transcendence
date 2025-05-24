@@ -8,8 +8,8 @@ const db = new sqlite3.Database("db.sqlite", (err) => {
 });
 
 db.run(
-	`UPDATE users SET two_factor_auth = ? where id = 2`, [
-        true
+	`UPDATE users SET friends = ? where id = 3`, [
+        '["1"]'
     ],
 	(err) => {
 		if (err) {

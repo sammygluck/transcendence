@@ -19,8 +19,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (userData.friends) {
       const friendDetails = await Promise.all(
-        userData.friends.map(async (friend) => {
-          const friendResponse = await fetch(`/user/${friend.id}`, {
+        JSON.parse(userData.friends).map(async (id) => {
+          const friendResponse = await fetch(`/user/${id}`, {
             method: "GET",
             headers: {
               "Authorization": `Bearer ${localStorage.getItem("token")}`,
@@ -125,14 +125,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Display a dummy friend with a "Send Friend Request" button
   function displayDummyFriend(username, friendListElement) {
-    friendListElement.innerHTML = `
-      <div class="friend" style="position: relative;">
-        ${username}
-        <button style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);" onclick="sendFriendRequest('${username}')">
-          Send Friend Request
-        </button>
-      </div>
-    `;
+    const dummyFriend = document.createElement("div");
+    dummyFriend.className = "friend";
+    dummyFriend.textContent = username;
+    dummyFriend.innerHTML += `<button style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%);" onclick="sendFriendRequest('${username}')"> Send Friend Request</button>`;
+    dummyFriend.appendChild(friendListElement);
   }
 
   // Open chat with a friend
@@ -165,8 +162,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           <h2>${profileData.username}</h2>
           <img src="${profileData.avatar || 'default-avatar.png'}" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%;">
           <p>Email: ${profileData.email}</p>
-          <p>Friends: ${profileData.friends ? profileData.friends.map(f => f.username).join(', ') : 'No friends yet'}</p>
-          <p>Blocked Users: ${profileData.blocked_users ? profileData.blocked_users.map(b => b.username).join(', ') : 'None'}</p>
+          <p>Friends: ${profileData.friends ? JSON.parse(profileData.friends).map(f => f).join(', ') : 'No friends yet'}</p>
+          <p>Blocked Users: ${profileData.blocked_users ? JSON.parse(profileData.blocked_users).map(b => b).join(', ') : 'None'}</p>
         `;
       })
       .catch((error) => {
@@ -208,7 +205,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 /*
  * Not yet tested or functional, just some mock code to show how it might look.
  */
-
+/*
 document.addEventListener("DOMContentLoaded", async () => {
   // Initialize live chat functionality
   function initializeLiveChat() {
@@ -281,3 +278,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   initializeLiveChat();
 });
+*/
