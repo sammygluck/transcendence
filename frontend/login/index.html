@@ -57,50 +57,6 @@
         <p class="toggle" onclick="toggleForm()">Don't have an account? Sign up</p>
     </div>
 
-    <script>
-        let isLogin = true;
-
-        function toggleForm() {
-            isLogin = !isLogin;
-            document.getElementById("form-title").textContent = isLogin ? "Login" : "Sign Up";
-            document.getElementById("auth-button").textContent = isLogin ? "Login" : "Sign Up";
-            document.querySelector(".toggle").textContent = isLogin ? "Don't have an account? Sign up" : "Already have an account? Login";
-            document.getElementById("username").style.display = isLogin ? "none" : "block";
-        }
-
-        async function authenticate() {
-            const username = document.getElementById("username").value;
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
-            const message = document.getElementById("message");
-            
-            const endpoint = isLogin ? "/login" : "/user";
-            const bodyData = isLogin ? { email, password } : { email, username, password };
-            
-            const response = await fetch(endpoint, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(bodyData)
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                message.style.color = "green";
-                message.textContent = isLogin ? "Login successful!" : "Signup successful!";
-                localStorage.setItem("userInfo", JSON.stringify(data));
-                localStorage.setItem("token", data.token);
-            } else {
-				message.style.color = "red";
-                message.textContent = data.message || (isLogin ? "Login failed!" : "Signup failed!");
-            }
-        }
-        function logout(){
-            localStorage.removeItem("userInfo");
-            localStorage.removeItem("token");
-        }
-    </script>
+    <script src="/login/script.js"></script>
 </body>
 </html>
