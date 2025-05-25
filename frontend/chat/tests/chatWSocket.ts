@@ -1,4 +1,5 @@
-import {User, Friend, fetchUserData, updateCurrentUserData} from "./userdata.ts";
+import { parse } from "path";
+import {User, Friend, fetchUserData, updateCurrentUserData} from "./userdata.js";
 
 const LChatContent = document.getElementById("live-chat-content") as HTMLElement;
 const LmessageIn = document.getElementById("live-message-in") as HTMLInputElement;
@@ -9,6 +10,8 @@ const messageIn = document.getElementById("message-in") as HTMLInputElement;
 const sendButton = document.getElementById("send-button") as HTMLButtonElement;
 
 const backButton = document.getElementById("back-button") as HTMLButtonElement;
+const userHeader = document.getElementById("user-header") as HTMLElement;
+const friends = document.getElementById("friends") as HTMLElement;
 const searchBar = document.getElementById("search-bar") as HTMLInputElement;
 const friendList = document.getElementById("friend-list") as HTMLElement;
 
@@ -51,6 +54,7 @@ ws.onmessage = (event) => {
     const parsedData = JSON.parse(event.data);
     if (parsedData.type === "public") {
         message.textContent = parsedData.message;
+        message.onclick = () => openProfile(parsedData.sendId);
         LChatContent.appendChild(message);
     } else if (parsedData.type === "private") {
         currentUserData.friendlist.forEach((friend: Friend) => {
@@ -77,43 +81,40 @@ async function initializeChat(): Promise<void> {
     });
     chatContent.style.display = "none";
     backButton.style.display = "none";
-    friendList.style.display = "block";
+    friends.style.display = "block";
     updateCurrentUserData();
+    updateChatHeader();
     displayFriendsList();
 }
 
 LsendButton.onclick = () => {
     const message = LmessageIn.value;
-    ws.send(
-        JSON.stringify({sendId: userInfo.id, message: message, destId: 0 })
-    );
+    if (message)
+        ws.send(JSON.stringify({sendId: userInfo.id, message: message, destId: 0 }));
     LmessageIn.value = "";
 }
 
 LmessageIn.onkeydown = (event) => {
     if (event.key === "Enter") {
         const message = LmessageIn.value;
-        ws.send(
-            JSON.stringify({sendId: userInfo.id, message: message, destId: 0 })
-        );
+        if (message)
+            ws.send(JSON.stringify({sendId: userInfo.id, message: message, destId: 0 }));
         LmessageIn.value = "";
     }
 }
 
 sendButton.onclick = () => {
     const message = messageIn.value;
-    ws.send(
-        JSON.stringify({sendId: userInfo.id, message: message, destId: selectedFriend })
-    );
+    if (message)
+        ws.send(JSON.stringify({sendId: userInfo.id, message: message, destId: selectedFriend }));
     messageIn.value = "";
 }
 
 messageIn.onkeydown = (event) => {
     if (event.key === "Enter") {
         const message = messageIn.value;
-        ws.send(
-            JSON.stringify({sendId: userInfo.id, message: message, destId: selectedFriend })
-        );
+        if (message)
+            ws.send(JSON.stringify({sendId: userInfo.id, message: message, destId: selectedFriend }));
         messageIn.value = "";
     }
 }
@@ -121,23 +122,38 @@ messageIn.onkeydown = (event) => {
 backButton.onclick = function () {
     chatContent.style.display = "none";
     backButton.style.display = "none";
-    friendList.style.display = "block";
+    friends.style.display = "block";
 
     selectedFriend = 0;
+    updateChatHeader();
 	displayFriendsList();
 }
 
+function updateChatHeader(userId: number = 0) {
+    if (!userId) {
+        userId = currentUserData.id;
+        userHeader.textContent = currentUserData.username;
+        userHeader.onclick = () => openProfile(userId);
+    }  else {
+        userHeader.textContent = currentUserData.friendlist.find(friend => friend.id === userId)?.username || "Unknown";
+        userHeader.onclick = () => openProfile(userId);
+    }
+}
 
 function displayFriendsList() {
 
 	searchBar.oninput = () => {
 		const query = searchBar.value.toLowerCase();
+        if (query.length === 0){
+            loadFriendList();
+            return;
+        }
 		const matchingFriends = currentUserData.friendlist.filter(friend =>
 			friend.username.toLowerCase().includes(query)
 		);
 		if (!matchingFriends.length) {
-			friendList.innerHTML = "<p>No friends found</p>"; // Change later to display dummy friend with option to send friend request
-		} else {
+			displayDummy(query);
+        } else {
 			loadFriendList(matchingFriends);
 		}
 	}
@@ -146,9 +162,9 @@ function displayFriendsList() {
 }
 
 function loadFriendList(friendsArray: Friend[] | null = null) {
-	if (!friendsArray) {
+	if (!friendsArray)
 		friendsArray = currentUserData.friendlist;
-	}
+
 	friendList.innerHTML = ""; // Clear the list
 	friendsArray.forEach((friend) => {
 		const friendItem = document.createElement("div");
@@ -159,12 +175,27 @@ function loadFriendList(friendsArray: Friend[] | null = null) {
 	});
 }
 
+function displayDummy(username: string) {
+    friendList.innerHTML = "";
+    const dummy = document.createElement("div");
+    dummy.className = "friend";
+    dummy.textContent = username;
+
+    const sendReq = document.createElement("button");
+    sendReq.textContent = "Send Friend Request";
+    sendReq.onclick = () => sendFriendRequest(username);
+
+    dummy.appendChild(sendReq);
+    friendList.appendChild(dummy);
+}
+
 function openChat(friendId: number) {
-    friendList.style.display = "none";
+    friends.style.display = "none";
     backButton.style.display = "block";
     chatContent.style.display = "block";
 
     selectedFriend = friendId;
+    updateChatHeader(friendId);
     loadChatHistory(friendId);
 }
 
@@ -180,4 +211,18 @@ function loadChatHistory(friendId: number) {
     } else {
         chatContent.innerHTML = "<p>No chat history available</p>";
     }
+}
+
+/*
+ * Temporary functions
+ */
+
+function openProfile(friendId: number) {
+    alert("Open profile for friend ID: " + friendId);
+    console.log("Open profile for friend ID:", friendId);
+}
+
+function sendFriendRequest(username: string) {
+    alert("Send friend request to username: " + username);
+    console.log("Send friend request to username:", username);
 }

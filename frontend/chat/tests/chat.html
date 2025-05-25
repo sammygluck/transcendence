@@ -29,6 +29,9 @@
       flex: 1;
       overflow-y: auto;
     }
+    #username {
+      cursor: pointer;
+    }
     .friend {
 	  cursor: pointer; /* Change cursor to pointer on hover */
       position: relative; /* Ensure the button can be positioned relative to the friend container */
@@ -108,17 +111,19 @@
     </div>
     <div id="friend-chat">
       <div id="chat-header">
-        <a id="user-profile" href="#">Your Username</a>
+        <button id="back-button"><</button>
+        <a id="user-header">Your Username</a>
       </div>
-      <!-- Friends list or chat content will be dynamically populated -->
-      <div id="friend-list">
+      <div id="friends">
         <input
         id="search-bar"
         Type="text"
         placeholder="Search friends..."
-      />
+        />
+      <!-- Friends list or chat content will be dynamically populated -->
+      <div id="friend-list"></div>
       </div>
-      <div id="chat-content">
+      <div id="chat-content" style="display: none;">
         <input
           id="message-in"
           type="text"
@@ -129,6 +134,6 @@
     </div>
   </div>
 
-  <script src="chatWSocket.js"></script>
+  <script type="module" src="chatWSocket.js"></script>
 </body>
 </html>
