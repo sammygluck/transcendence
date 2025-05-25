@@ -17,7 +17,7 @@ async function routes(fastify, options) {
 			console.log(chatClients);
 			try {
 				const result = await fastify.sqlite.get(
-						`SELECT id, username, email, created_at, friends,
+						`SELECT id, username, email, created_at,
 								avatar, full_name, alias
 						FROM users
 						WHERE id = ?`,
@@ -42,11 +42,16 @@ async function routes(fastify, options) {
 						delete result.created_at;
 				}
 				return result;
-			} catch (error) {
-				reply.statusCode = 500;
-				console.error("Error getting user: " + error.message);
-				return { error: "Error getting user" };
-			}
+			// } 
+			 } catch (error) {
+  				request.log.error(error);                     // full stacktrace
+  				return reply.code(500).send({ error: error.message });
+				}
+			// catch (error) {
+			// 	reply.statusCode = 500;
+			// 	console.error("Error getting user: " + error.message);
+			// 	return { error: "Error getting user" };
+			// }
 		}
 	);
 
