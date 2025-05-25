@@ -8,3 +8,17 @@
     width: 100%;
   }
   
+  /* === Profile modal (scoped) === */
+.profile-overlay   { position:fixed; inset:0; background:rgba(0,0,0,.5);
+  display:flex; align-items:center; justify-content:center;
+  z-index:1000; }
+.profile-modal     { background:#fff; border-radius:10px; padding:2rem;
+  width:90%; max-width:480px; position:relative;
+  box-shadow:0 4px 20px rgba(0,0,0,.3); }
+.profile-modal .close-btn { position:absolute; top:.5rem; right:1rem;
+         background:none; border:none; font-size:1.5rem; }
+.profile-avatar    { width:80px; height:80px; border-radius:50%;
+  object-fit:cover; margin-bottom:1rem; }
+/* Utility */
+.view-profile      { cursor:pointer; color:var(--link, #0066ee); }
+.view-profile:hover{ text-decoration:underline; }

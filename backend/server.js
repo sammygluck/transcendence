@@ -15,10 +15,11 @@ fastify.register(require("@fastify/jwt"), {
 	secret: secret,
 });
 fastify.register(require("./plugins/authenticate_jwt"));
-fastify.register(require("@fastify/static"), {
-	root: path.join(__dirname, "..", "frontend"),
-	//prefix: "/public/", // optional: default '/'
-});
+
+// fastify.register(require("@fastify/static"), {
+// 	root: path.join(__dirname, "..", "uploads"),
+// 	prefix: "/uploads/", // optional: default '/'
+// });
 fastify.register(require("@fastify/formbody")); // parse x-www-form-urlencoded bodies
 fastify.register(require("@fastify/multipart")); // parse multipart/form-data bodies (picture upload)
 
@@ -167,6 +168,11 @@ fastify.register(async function (fastify) {
 		pong_server.game.addSocket(socket);
 		console.log("client connected to game");
 	});
+});
+
+fastify.register(require("@fastify/static"), {
+	root: path.join(__dirname, "..", "frontend"),
+	//prefix: "/public/", // optional: default '/'
 });
 
 // Run the server!

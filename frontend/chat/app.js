@@ -1,3 +1,36 @@
+import { openProfile } from "../profile.js";
+
+let __CURRENT_USER_ID = null;
+window.__CURRENT_USER_ID = null;
+(async () => {
+   /* Pull token from the userInfo blob and expose it */
+   const buf = localStorage.getItem("userInfo");
+   if (!buf) { window.location.href = "/login"; return; }
+   const userInfo = JSON.parse(buf);
+   localStorage.setItem("token", userInfo.token);          // <-- make profile.js happy
+
+   const me = await fetch("/currentuser", {
+     headers: { Authorization:`Bearer ${userInfo.token}` } // use the fresh token
+   }).then(r=>r.json()).catch(()=>null);
+   if (!me) { window.location.href = "/login"; return; }
+   __CURRENT_USER_ID = window.__CURRENT_USER_ID = me.id;
+})();
+
+document.body.addEventListener("click", e => {
+	const t = e.target.closest(".view-profile");
+	if (!t) return;
+
+	// parse & validate
+	const raw = t.dataset.userid;
+	const userId = parseInt(raw, 10);
+	if (Number.isNaN(userId)) {
+	console.warn("view-profile clicked but data-userid is invalid:", raw);
+		return;
+	}
+	
+		openProfile(userId);
+	});
+
 const userInfoStr = localStorage.getItem("userInfo");
 if (!userInfoStr) {
 	window.location.href = "/login";

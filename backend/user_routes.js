@@ -11,15 +11,18 @@ async function routes(fastify, options) {
 	fastify.get(
 		"/user/:id",
 		{
-			//onRequest: [fastify.authenticate],
+			onRequest: [fastify.authenticate],
 		},
 		async (request, reply) => {
 			console.log(chatClients);
 			try {
 				const result = await fastify.sqlite.get(
-					"SELECT users.id, users.username, users.email, users.created_at, users.updated_at, users.friends, users.avatar FROM users WHERE id = ?",
-					[request.params.id]
-				);
+						`SELECT id, username, email, created_at, friends,
+								avatar, full_name, alias
+						FROM users
+						WHERE id = ?`,
+						[request.params.id]
+					);
 				if (!result) {
 					reply.statusCode = 404;
 					return { error: "User not found" };
@@ -32,6 +35,11 @@ async function routes(fastify, options) {
 					result.online = true;
 				} else {
 					result.online = false;
+				}
+				if (!request.user || +request.user.id !== +request.params.id) {
+						delete result.email;
+						delete result.full_name;
+						delete result.created_at;
 				}
 				return result;
 			} catch (error) {
@@ -402,6 +410,38 @@ async function routes(fastify, options) {
 		}
 	);
 
+// PUT /profile – update alias, full_name and email (for *your own* profile only)
+fastify.put(
+	"/profile",
+	{ onRequest: [fastify.authenticate] },
+	async (request, reply) => {
+		const { alias = null, full_name = null, email = null } = request.body || {};
+		if (!alias && !full_name && !email) {
+			reply.statusCode = 400;
+			return { error: "Nothing to update" };
+		}
+		try {
+			const updated_at = new Date().toISOString().slice(0, 19).replace("T", " ");
+			const sql = `
+				UPDATE users
+				SET alias = COALESCE(?,alias),
+					full_name = COALESCE(?,full_name),
+					email = COALESCE(?,email),
+					updated_at = ?
+				WHERE id = ?`;
+			const res = await fastify.sqlite.run(sql, [alias, full_name, email, updated_at, request.user.id]);
+			if (res.changes === 0) {
+				reply.statusCode = 404;
+				return { error: "User not found" };
+			}
+			return { alias, full_name, email };
+		} catch (err) {
+			reply.statusCode = 500;
+			return { error: "DB error" };
+		}
+	}
+);
+
 	// add friend
 	fastify.post(
 		"/friend",
@@ -654,7 +694,8 @@ async function routes(fastify, options) {
 				return { error: "Invalid file type" };
 			}
 			try {
-				const uploadDir = path.join(__dirname, "uploads");
+				const uploadDir = path.join(__dirname, "..", "frontend", "uploads");
+				// const uploadDir = path.join(__dirname, "uploads");
 				// check if the directory exists, if not create it
 				try {
 					await fs.stat(uploadDir);

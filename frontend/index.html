@@ -51,5 +51,32 @@
 		data-logo_alignment="left">
 	</div>
 
+    <p>
+        View Profile -> <span class="view-profile" data-user-id="1">User 1</span>
+    </p>
+
+    <template id="profile-tpl">
+        <div class="profile-overlay">
+          <div class="profile-modal">
+            <button class="close-btn">&times;</button>
+      
+            <img id="pr-avatar" class="profile-avatar" src="https://via.placeholder.com/80">
+            <h2 id="pr-username">@user</h2>
+      
+            <p><strong>Alias:</strong>      <span id="pr-alias"></span></p>
+            <p class="private"><strong>Full:</strong>       <span id="pr-full"></span></p>
+            <p class="private"><strong>Email:</strong>      <span id="pr-email"></span></p>
+            <p class="private"><strong>Created:</strong>    <span id="pr-created"></span></p>
+            <p><strong>Online:</strong>     <span id="pr-online"></span></p>
+      
+            <footer>
+              <button id="pr-edit"   class="btn" style="display:none">Edit</button>
+              <button id="pr-save"   class="btn" style="display:none">Save</button>
+              <button id="pr-cancel" class="btn" style="display:none">Cancel</button>
+            </footer>
+          </div>
+        </div>
+      </template>
+      <script type="module" src="chat/app.js"></script> 
 </body>
 </html>
