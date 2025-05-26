@@ -1,10 +1,11 @@
 import { parse } from "path";
-import {User, Friend, fetchUserData, updateCurrentUserData} from "./userdata.js";
+import {User, Friend, fetchUserData} from "./userdata.js";
 
 const LChatContent = document.getElementById("live-chat-content") as HTMLElement;
 const LmessageIn = document.getElementById("live-message-in") as HTMLInputElement;
 const LsendButton = document.getElementById("live-send-button") as HTMLButtonElement;
 
+const friendChat = document.getElementById("friend-chat") as HTMLElement;
 const chatContent = document.getElementById("chat-content") as HTMLElement;
 const messageIn = document.getElementById("message-in") as HTMLInputElement;
 const sendButton = document.getElementById("send-button") as HTMLButtonElement;
@@ -52,6 +53,7 @@ ws.onclose = (e) => {
 ws.onmessage = (event) => {
     const message = document.createElement("div");
     const parsedData = JSON.parse(event.data);
+    if (currentUserData.blocked_users.find(userId => userId === parsedData.sendId)) return;
     if (parsedData.type === "public") {
         message.textContent = parsedData.message;
         message.onclick = () => openProfile(parsedData.sendId);
@@ -61,6 +63,9 @@ ws.onmessage = (event) => {
             if (friend.id === parsedData.sendId) {
                 const messageContent = parsedData.message;
                 friend.message_history?.push(messageContent);
+                if (selectedFriend === friend.id) {
+                    loadChatHistory(friend.id);
+                }
             }
         });
     }
@@ -79,7 +84,7 @@ async function initializeChat(): Promise<void> {
     currentUserData.friendlist.forEach((friend: Friend) => {
         friend.message_history = [];
     });
-    chatContent.style.display = "none";
+    friendChat.style.display = "none";
     backButton.style.display = "none";
     friends.style.display = "block";
     updateCurrentUserData();
@@ -120,7 +125,7 @@ messageIn.onkeydown = (event) => {
 }
 
 backButton.onclick = function () {
-    chatContent.style.display = "none";
+    friendChat.style.display = "none";
     backButton.style.display = "none";
     friends.style.display = "block";
 
@@ -143,13 +148,13 @@ function updateChatHeader(userId: number = 0) {
 function displayFriendsList() {
 
 	searchBar.oninput = () => {
-		const query = searchBar.value.toLowerCase();
+		const query = searchBar.value;
         if (query.length === 0){
             loadFriendList();
             return;
         }
 		const matchingFriends = currentUserData.friendlist.filter(friend =>
-			friend.username.toLowerCase().includes(query)
+			friend.username.includes(query)
 		);
 		if (!matchingFriends.length) {
 			displayDummy(query);
@@ -168,8 +173,11 @@ function loadFriendList(friendsArray: Friend[] | null = null) {
 	friendList.innerHTML = ""; // Clear the list
 	friendsArray.forEach((friend) => {
 		const friendItem = document.createElement("div");
+        const statusIcon = document.createElement("span");
+        statusIcon.classList.add(friend.online ? "online" : "offline");
 		friendItem.className = "friend";
 		friendItem.textContent = friend.username;
+        friendItem.appendChild(statusIcon);
     	friendItem.onclick = () => openChat(friend.id);
     	friendList.appendChild(friendItem);
 	});
@@ -192,7 +200,7 @@ function displayDummy(username: string) {
 function openChat(friendId: number) {
     friends.style.display = "none";
     backButton.style.display = "block";
-    chatContent.style.display = "block";
+    friendChat.style.display = "block";
 
     selectedFriend = friendId;
     updateChatHeader(friendId);
@@ -201,7 +209,7 @@ function openChat(friendId: number) {
 
 function loadChatHistory(friendId: number) {
     chatContent.innerHTML = ""; // Clear previous chat content
-    const chatHistory = currentUserData.friendlist.find(friend => friend.id === friendId)?.message_history;
+    const chatHistory = currentUserData.friendlist.find(friend => friend.id === friendId).message_history;
     if (chatHistory) {
         chatHistory.forEach((message) => {
             const messageElement = document.createElement("div");
@@ -211,6 +219,28 @@ function loadChatHistory(friendId: number) {
     } else {
         chatContent.innerHTML = "<p>No chat history available</p>";
     }
+}
+
+/**
+ * Updates the friends list every 30 seconds to check for new friends and their online status.
+ * Updates UI if not in chat mode.
+ */
+function updateCurrentUserData(): void {
+	setInterval(async () => {
+		try {
+			const updatedData = await fetchUserData(userInfo.id);
+            updatedData.friendlist.forEach((friend: Friend) => {
+                const existingFriend = currentUserData.friendlist.find(userId => userId.id === friend.id);
+                if (existingFriend.message_history)
+                    friend.message_history = existingFriend.message_history;
+            });
+            currentUserData = updatedData;
+		} catch (error) {
+			console.error("Error updating friends list:", error);
+		}
+        if (selectedFriend === 0)
+            displayFriendsList();
+	}, 30000);
 }
 
 /*
