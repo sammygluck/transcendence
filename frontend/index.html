@@ -1,55 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transcendence - Pong</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Transcendence</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <!-- Registration -->
-    <div id="registration">
-        <form id="registrationForm">
-            <input type="text" id="alias" placeholder="Alias" required />
-            <input type="email" id="emailReg" placeholder="Email" required />
-            <input type="password" id="passwordReg" placeholder="Password" required />
-            <button type="submit">Register</button>
-        </form>
-    </div>    
-    <!-- Login -->
-     <div id="login">
-        <form id="loginForm">
-            <input type="email" id="emailLogin" placeholder="Email" required />
-            <input type="password" id="passwordLogin" placeholder="Password" required />
-            <button type="submit">Login</button>
-        </form>
-     </div>
-    <!-- GAME SECTION -->
-    <h1 id="welcome-message">Welcome to Transcendence Pong</h1>
-    <canvas id="pongCanvas"></canvas>
-    <script src="pong.js"></script>
-
-	<!-- GOOGLE SIGN IN -->
-    <script src="https://accounts.google.com/gsi/client" async></script>
-	<script src="auth.js"></script>
-	<div id="g_id_onload"
-		data-client_id="244561649148-pbll9pc66oig5mcul4ivjp9igql4emef.apps.googleusercontent.com"
-		data-context="signin"
-		data-ux_mode="popup"
-		data-login_uri="http://localhost:3000/googleauth"
-		data-auto_prompt="false"
-		data-callback="handleGoogleCredentialResponse"
-		>
+	<div id="loading" class="fixed inset-0 flex items-center justify-center bg-gray-100 z-50">
+		<div class="flex items-center justify-center space-x-2">
+			<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
+			<span class="text-gray-600">Loading...</span>
+		</div>
 	</div>
+	<div  class="bg-gray-100 min-h-screen p-6 hidden" id="tournamentPage">	
+	<div class="flex gap-6">
+		<div class="w-1/4 bg-white p-4 rounded-2xl shadow">
+		<h2 class="text-xl font-bold mb-4">Tournaments</h2>
+		<ul id="tournamentList" class="space-y-2"></ul>
 
-	<div class="g_id_signin" data-locale="en"
-		data-type="standard"
-		data-shape="rectangular"
-		data-theme="outline"
-		data-text="signin_with"
-		data-size="large"
-		data-logo_alignment="left">
+		<form id="createTournamentForm" class="mt-6">
+			<input type="text" id="tournamentName" class="w-full p-2 border rounded mb-2" placeholder="New Tournament" required />
+			<button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Create</button>
+		</form>
+		</div>
+
+		<div class="flex-1 bg-white p-4 rounded-2xl shadow">
+		<h2 class="text-xl font-bold mb-4" id="selectedTournamentTitle">Select a tournament</h2>
+		<p id="statusMessage" class="mb-4 text-sm text-gray-600"></p>
+		<ul id="playerList" class="space-y-2 mb-4"></ul>
+
+		<div class="flex gap-4">
+			<button id="subscribeBtn" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 hidden">Subscribe</button>
+			<button id="startBtn" class="bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 hidden">Start Tournament</button>
+		</div>
+		</div>
 	</div>
-
+	</div>
+	<script src="router.js"></script>
+	<script src="/tournament/script.js"></script>
 </body>
 </html>
