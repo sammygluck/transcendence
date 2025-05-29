@@ -8,14 +8,78 @@
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-	<div id="loading" class="fixed inset-0 flex items-center justify-center bg-gray-100 z-50">
+	<!-- Navbar (on top), (data-* Attribute to store custom data, used here to prevent page refresh on click) -->
+	<nav class="bg-gray-800 text-white px-4 py-3 shadow-md z-50 relative">
+		<div class="max-w-7xl mx-auto flex items-center justify-between">
+		  <div class="text-xl font-bold">Transcendence</div>
+		  <div class="space-x-4 hidden md:flex">
+			<a href="/login" data-link class="px-3 py-2 rounded-md hover:bg-gray-700">Login</a>
+			<a href="/tournament" data-link class="px-3 py-2 rounded-md hover:bg-gray-700">Tournament</a>
+			<a href="/game" data-link class="px-3 py-2 rounded-md hover:bg-gray-700">Game</a>
+		  </div>
+		  <div class="md:hidden">
+			<button id="menuToggle" class="focus:outline-none">
+			  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+					  d="M4 6h16M4 12h16M4 18h16"/>
+			  </svg>
+			</button>
+		  </div>
+		</div>
+	  </nav>
+	  
+	  <!-- Loading Overlay (under the navbar) -->
+	  <div id="loading" class="fixed inset-0 pt-16 flex items-center justify-center bg-gray-100 z-40 route-view">
 		<div class="flex items-center justify-center space-x-2">
-			<div class="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
-			<span class="text-gray-600">Loading...</span>
+		  <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
+		  <span class="text-gray-600">Loading...</span>
+		</div>
+	  </div>
+  	</div>
+	<!-- Login page-->
+	<div id="loginPage" class="route-view hidden flex items-center justify-center h-screen bg-gray-100"
+>
+		<div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-md w-full">
+			<h2 id="form-title" class="text-2xl font-semibold mb-4">Login</h2>
+			<input
+			type="text"
+			id="username"
+			placeholder="Username"
+			required
+			class="w-full p-2.5 mb-4 border border-gray-300 rounded hidden"
+			/>
+			<input
+			type="email"
+			id="email"
+			placeholder="Email"
+			required
+			class="w-full p-2.5 mb-4 border border-gray-300 rounded"
+			/>
+			<input
+			type="password"
+			id="password"
+			placeholder="Password"
+			required
+			class="w-full p-2.5 mb-4 border border-gray-300 rounded"
+			/>
+			<button
+			id="auth-button"
+			onclick="authenticate()"
+			class="w-full py-2.5 bg-green-500 text-white font-medium rounded hover:bg-green-600 transition-colors"
+			>
+			Login
+			</button>
+			<p id="message" class="text-red-500 mt-2"></p>
+			<p
+			class="toggle mt-4 text-blue-500 hover:text-blue-700 cursor-pointer"
+			onclick="toggleForm()"
+			>
+			Don't have an account? Sign up
+			</p>
 		</div>
 	</div>
-	<div  class="bg-gray-100 min-h-screen p-6 hidden" id="tournamentPage">	
-	<div class="flex gap-6">
+	<!-- Tournament page-->
+	<div class="flex gap-6 route-view" id="tournamentPage">
 		<div class="w-1/4 bg-white p-4 rounded-2xl shadow">
 		<h2 class="text-xl font-bold mb-4">Tournaments</h2>
 		<ul id="tournamentList" class="space-y-2"></ul>
@@ -37,8 +101,14 @@
 		</div>
 		</div>
 	</div>
+	<!-- 404 Page -->
+	<div id="notFound" class="route-view hidden flex flex-col items-center justify-center h-screen text-center text-red-500">
+		<h1 class="text-4xl font-bold mb-2">404</h1>
+		<p class="text-lg">Page not found</p>
+		<a href="/" data-link class="mt-4 text-blue-500 hover:underline">Go to Home</a>
 	</div>
 	<script src="router.js"></script>
 	<script src="/tournament/script.js"></script>
+	<script src="/login/script.js"></script>
 </body>
 </html>
