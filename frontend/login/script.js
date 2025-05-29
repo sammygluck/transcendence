@@ -62,3 +62,9 @@ function logout() {
     localStorage.removeItem("userInfo");
     localStorage.removeItem("token");
 }
+let passwordField = document.getElementById("password");
+passwordField.addEventListener("keydown", e => {
+    if (e.code === "Enter") {
+        authenticate();
+    }
+});
