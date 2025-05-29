@@ -31,6 +31,11 @@ document.body.addEventListener("click", e => {
 		openProfile(userId);
 	});
 
+document.getElementById("view-my-profile")?.addEventListener("click", () => {
+	if (window.__CURRENT_USER_ID)
+		openProfile(window.__CURRENT_USER_ID);
+});
+
 const userInfoStr = localStorage.getItem("userInfo");
 if (!userInfoStr) {
 	window.location.href = "/login";

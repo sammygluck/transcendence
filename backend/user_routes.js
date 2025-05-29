@@ -447,6 +447,8 @@ fastify.put(
 	}
 );
 
+
+
 	// add friend
 	fastify.post(
 		"/friend",
@@ -777,6 +779,42 @@ fastify.put(
 			}
 		}
 	);
+
+	/* ----------  GET /friends/:id  ---------- */
+fastify.get("/friends/:id",
+	{ onRequest:[fastify.authenticate] },
+	async (req, reply) => {
+	  const u = await fastify.sqlite.get(
+		"SELECT friends FROM users WHERE id = ?",
+		[req.params.id]
+	  );
+	  if (!u || !u.friends) return [];
+	  const ids = JSON.parse(u.friends);
+	  if (!ids.length) return [];
+	  const placeholders = ids.map(() => "?").join(",");
+	  const rows = await fastify.sqlite.all(
+		`SELECT id, username FROM users WHERE id IN (${placeholders})`, ids
+	  );
+	  return rows;
+	}
+  );
+  
+  /* ----------  GET /history/:id  ---------- */
+  fastify.get("/history/:id",
+	{ onRequest:[fastify.authenticate] },
+	async (req, reply) => {
+	  return await fastify.sqlite.all(
+		`SELECT timestamp, winnerId, loserId,
+				scoreWinner, scoreLoser
+		 FROM   game_history
+		 WHERE  winnerId = ? OR loserId = ?
+		 ORDER  BY timestamp DESC
+		 LIMIT  20`,
+		[req.params.id, req.params.id]
+	  );
+	}
+  );
+  
 }
 
 module.exports.routes = routes;

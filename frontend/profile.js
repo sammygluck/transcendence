@@ -16,6 +16,7 @@ export async function openProfile(userId) {
     if (!res.ok) { alert(data.error || "Cannot load profile"); return; }
   
     renderView(overlay, data);
+    wireExtraButtons(overlay, data); 
   
     const isMe = +userId === window.__CURRENT_USER_ID;
     if (isMe) wireEdit(overlay, data);
@@ -81,3 +82,70 @@ export async function openProfile(userId) {
       ov.remove(); openProfile(data.id);                  // reload fresh view
     };
   }
+
+     /* ----------  Friends / Match history  ---------- */
+function wireExtraButtons(ov, data) {
+  const friendsBtn = ov.querySelector("#pr-friends");
+  const histBtn    = ov.querySelector("#pr-history");
+  const extraBox   = ov.querySelector("#pr-extra");
+  const token      = localStorage.getItem("token");
+
+  friendsBtn.onclick = async () => {
+    extraBox.innerHTML = "<p>Loading…</p>";
+    let rows = [];
+    try {
+      const r = await fetch(`/friends/${data.id}`, {
+        headers:{ Authorization:`Bearer ${token}` }
+      });
+      rows = await r.json();
+    } catch { /* ignore */ }
+
+    if (!Array.isArray(rows) || !rows.length) {
+      extraBox.textContent = "No friends to show.";
+      return;
+    }
+
+    const ul = document.createElement("ul");
+    rows.forEach(u => {
+      const li = document.createElement("li");
+      li.innerHTML =
+        `<span class="view-profile" data-userid="${u.id}"
+                style="cursor:pointer;color:var(--link,#06c)">${u.username}</span>`;
+      ul.appendChild(li);
+    });
+    extraBox.innerHTML = ""; extraBox.appendChild(ul);
+  };
+
+  histBtn.onclick = async () => {
+    extraBox.innerHTML = "<p>Loading…</p>";
+    let games = [];
+    try {
+      const r = await fetch(`/history/${data.id}`, {
+        headers:{ Authorization:`Bearer ${token}` }
+      });
+      games = await r.json();
+    } catch { /* ignore */ }
+
+    if (!Array.isArray(games) || !games.length) {
+      extraBox.textContent = "No matches yet.";
+      return;
+    }
+
+    const tbl = document.createElement("table");
+    tbl.style.width = "100%";
+    tbl.innerHTML =
+      "<thead><tr><th>Date</th><th>Result</th><th>Score</th></tr></thead>";
+    const tb = document.createElement("tbody");
+    games.forEach(g => {
+      const row = document.createElement("tr");
+      const youWon = +g.winnerId === +data.id;
+      row.innerHTML =
+        `<td>${g.timestamp.slice(0,10)}</td>
+         <td>${youWon ? "Win" : "Loss"}</td>
+         <td>${g.scoreWinner} – ${g.scoreLoser}</td>`;
+      tb.appendChild(row);
+    });
+    tbl.appendChild(tb);
+    extraBox.innerHTML = ""; extraBox.appendChild(tbl);
+  };
+}

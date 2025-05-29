@@ -54,6 +54,7 @@
     <p>
         View Profile -> <span class="view-profile" data-userid="1">User 1</span>
     </p>
+    <button id="view-my-profile">My Profile</button>
 
     <template id="profile-tpl">
         <div class="profile-overlay">
@@ -73,7 +74,11 @@
               <button id="pr-edit"   class="btn" style="display:none">Edit</button>
               <button id="pr-save"   class="btn" style="display:none">Save</button>
               <button id="pr-cancel" class="btn" style="display:none">Cancel</button>
+
+              <button id="pr-friends" class="btn">Friends</button>
+              <button id="pr-history" class="btn">Match&nbsp;History</button>
             </footer>
+            <div id="pr-extra" style="margin-top:1rem; max-height:240px; overflow:auto"></div>
           </div>
         </div>
       </template>
