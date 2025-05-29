@@ -4,8 +4,8 @@ export interface User {
 	email: string;
 	created_at: string;
 	updated_at: string;
-	blocked_users: string[] | null;	//Change to number[] later
-	friends: string[]; 		//Change to number[] later
+	blocked_users: string | null;	//Change to number[] later
+	friends: string | null; 		//Change to number[] later
 	friendlist: Friend[];
 	avatar: string | null;
     online: boolean;
@@ -15,7 +15,8 @@ export interface Friend {
 	id: number;
 	username: string;
 	online: boolean;
-	message_history?: string[];
+	new_message: boolean| false;
+	chat_history?: string[];
 }
 
 
@@ -35,6 +36,7 @@ export async function fetchUserData(userID: number): Promise<User | null> {
 			throw new Error(`Error fetching user: ${userResponse.statusText}`);
 		}
 		const userData : User = await userResponse.json();
+		if (!userData.blocked_users) userData.blocked_users = '[]';
 		// Fetch friends' data
 		if (userData.friends) {
 			const friendDetails: Friend[] = await Promise.all(
@@ -69,14 +71,4 @@ export async function fetchUserData(userID: number): Promise<User | null> {
 		alert("Failed to load user data. Please try again later.");
 	}
 	return null; 
-}
-
-
-const userInfoStr = localStorage.getItem("userInfo");
-if (!userInfoStr) {
-	window.location.href = "/login";
-}
-const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
-if (!userInfo) {
-	window.location.href = "/login";
 }

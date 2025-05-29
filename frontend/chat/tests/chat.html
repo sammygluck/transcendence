@@ -25,10 +25,6 @@
       text-align: center;
       font-weight: bold;
     }
-    #chat-content {
-      flex: 1;
-      overflow-y: auto;
-    }
     #username {
       cursor: pointer;
     }
@@ -71,11 +67,7 @@
       transform: translateY(-50%);
       background-color: #F5EEDC;
     }
-    #message-io {
-      position: absolute; 
-      bottom: 0; /* Align to the bottom */
-      left: 0; /* Align to the left edge of the parent */
-      right: 0; /* Align to the right edge of the parent */
+    .message-io {
       display: flex;
       flex-direction: row;
       gap: 10px; /* Add spacing between input and button */
@@ -99,19 +91,30 @@
       position: relative; /* Make this the positioning context for #message-io */
     }
     #friends-and-chat {
-      position: relative;
       flex: 1; /* Take up 1/3 of the width */
       display: flex;
       flex-direction: column; /* Maintain column layout inside */
       border: 1px solid #ddd; /* Add a small border */
       padding: 10px; /* Add inner padding */
       box-sizing: border-box; /* Ensure padding doesn't affect width/height */
+      position: relative;
+    }
+    #friend-chat{
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      min-height: 0;
+      box-sizing: border-box;
+      position: relative;
     }
     .chat-window {
       position: relative;
       flex: 1;
       display: flex;
-      flex-direction: column;
+      flex-direction: column-reverse;
+      overflow-y: auto;
+      min-height: 0;
       box-sizing: border-box;
     }
     #search-bar {
@@ -125,16 +128,15 @@
   <div id="chat-block">
     <div id="live-chat">
       <h3 style="margin: 0;">Live Chat</h3>
-      <div id="live-chat-content" class="chat-window">
-        <!-- Live chat messages will be dynamically populated -->
-      <div id="message-io">
+      <!-- Live chat messages will be dynamically populated -->
+      <div id="live-chat-content" class="chat-window"></div>
+      <div class="message-io">
         <input
           id="live-message-in"
           type="text"
           placeholder="Type a message..."
         />
         <button id="live-send-button">Send</button>
-      </div>
       </div>
     </div>
     <div id="friends-and-chat">
@@ -153,7 +155,7 @@
       </div>
       <div id="friend-chat">
         <div id="chat-content" class="chat-window"></div>
-        <div id="message-io">
+        <div class="message-io">
          <input
            id="message-in"
            type="text"

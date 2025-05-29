@@ -17,7 +17,7 @@ async function routes(fastify, options) {
 			console.log(chatClients);
 			try {
 				const result = await fastify.sqlite.get(
-					"SELECT users.id, users.username, users.email, users.created_at, users.updated_at, users.friends, users.avatar FROM users WHERE id = ?",
+					"SELECT users.id, users.username, users.email, users.created_at, users.updated_at, users.blocked_users, users.friends, users.avatar FROM users WHERE id = ?",
 					[request.params.id]
 				);
 				if (!result) {
