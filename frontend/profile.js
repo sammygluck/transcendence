@@ -17,25 +17,35 @@ export async function openProfile(userId) {
   
     renderView(overlay, data);
     wireExtraButtons(overlay, data); 
-  
+    wireFriendBlock(overlay, data);
+
     const isMe = +userId === window.__CURRENT_USER_ID;
     if (isMe) wireEdit(overlay, data);
   }
   
   function renderView(ov, d) {
-    ov.querySelector("#pr-username").textContent = "@" + (d.alias?.trim() || d.username);
-    ov.querySelector("#pr-alias")   .textContent = d.alias ?? d.username;
-    ov.querySelector("#pr-full")    .textContent = d.full_name || "";
-    ov.querySelector("#pr-email")   .textContent = d.email || "";
-    ov.querySelector("#pr-created") .textContent = d.created_at || "";
-    ov.querySelector("#pr-online")  .textContent = d.online ? "Yes" : "No";
+    const aliasVal = d.alias?.trim() || d.username;
+
+    ov.querySelector("#pr-username").textContent = "@" + aliasVal;
+    ov.querySelector("#pr-alias").textContent = aliasVal;
+  
+    const fullVal = d.full_name?.trim() || aliasVal;
+    ov.querySelector("#pr-full").textContent = fullVal;
+    ov.querySelector("#pr-email")  .textContent = d.email        || "";
+    ov.querySelector("#pr-created").textContent = d.created_at  || "";
+    ov.querySelector("#pr-online") .textContent = d.online       ? "Yes" : "No";
   
     const img = ov.querySelector("#pr-avatar");
-    const url = d.avatar ? `/uploads/${d.avatar}?_=${Date.now()}` : "https://via.placeholder.com/80?text=No+Avatar";
+    const url = d.avatar
+      ? `/uploads/${d.avatar}?_=${Date.now()}`
+      : "https://via.placeholder.com/80?text=No+Avatar";
     img.src = url;
-    // hide private fields if they’re blank (they were pruned by the server)
-    ov.querySelectorAll(".private").forEach(el => { if (!el.textContent.trim()) el.style.display = "none"; });
+  
+    ov.querySelectorAll(".private").forEach(el => {
+      if (!el.textContent.trim()) el.style.display = "none";
+    });
   }
+  
   
   function wireEdit(ov, data) {
     const edit   = ov.querySelector("#pr-edit");
@@ -148,4 +158,85 @@ function wireExtraButtons(ov, data) {
     tbl.appendChild(tb);
     extraBox.innerHTML = ""; extraBox.appendChild(tbl);
   };
+}
+
+/* ─── Add / Remove Friend  &  Block / Unblock ─── */
+function wireFriendBlock(ov, data) {
+  const friendBtn = ov.querySelector("#pr-friend-action");
+  const blockBtn  = ov.querySelector("#pr-block-action");
+  const token     = localStorage.getItem("token");
+
+  // If it's my own profile, hide both buttons
+  if (+data.id === window.__CURRENT_USER_ID) {
+    friendBtn.style.display = "none";
+    blockBtn.style.display  = "none";
+    return;
+  }
+
+  // Immediately fetch my current friends & blocked lists
+  (async () => {
+    const r = await fetch("/currentuser", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const me = await r.json();
+    const friends = me.friends ? JSON.parse(me.friends) : [];
+    const blocked = me.blocked_users ? JSON.parse(me.blocked_users) : [];
+
+    // Helpers to set button text
+    function updateFriendLabel() {
+      friendBtn.textContent = friends.includes(String(data.id))
+        ? "Remove Friend"
+        : "Add Friend";
+    }
+    function updateBlockLabel() {
+      blockBtn.textContent = blocked.includes(String(data.id))
+        ? "Unblock User"
+        : "Block User";
+    }
+
+    updateFriendLabel();
+    updateBlockLabel();
+
+    // Add / Remove Friend
+    friendBtn.onclick = async () => {
+      const isFriend = friends.includes(String(data.id));
+      const method   = isFriend ? "DELETE" : "POST";
+      const res = await fetch("/friend", {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ friendId: data.id })
+      });
+      if (!res.ok) return;
+      if (isFriend) {
+        friends.splice(friends.indexOf(String(data.id)), 1);
+      } else {
+        friends.push(String(data.id));
+      }
+      updateFriendLabel();
+    };
+
+    // Block / Unblock User
+    blockBtn.onclick = async () => {
+      const isBlocked = blocked.includes(String(data.id));
+      const method    = isBlocked ? "DELETE" : "POST";
+      const res = await fetch("/block", {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId: data.id })
+      });
+      if (!res.ok) return;
+      if (isBlocked) {
+        blocked.splice(blocked.indexOf(String(data.id)), 1);
+      } else {
+        blocked.push(String(data.id));
+      }
+      updateBlockLabel();
+    };
+  })();
 }
