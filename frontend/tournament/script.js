@@ -20,6 +20,10 @@ function connectGameServer() {
     if (!userInfo || !userInfo.token) {
         return;
     }
+    if (ws) {
+        console.warn("Already connected to the game server");
+        return;
+    }
     ws = new WebSocket(`ws://${window.location.host}/game?token=${userInfo.token}`);
     ws.addEventListener("error", (error) => {
         console.error("WebSocket error:", error);
@@ -70,11 +74,11 @@ function disconnectGameServer() {
     if (ws) {
         ws.close();
         ws = null;
+        console.log("Disconnected from the game server");
     }
     selectedTournament = null;
     tournaments = [];
     renderTournamentList();
-    console.log("Disconnected from the game server");
     subscribeBtn.removeEventListener("click", subscribeBtnClick);
     startBtn.removeEventListener("click", startBtnClick);
 }
