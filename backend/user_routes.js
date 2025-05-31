@@ -224,20 +224,6 @@ async function routes(fastify, options) {
 		}
 	});
 
-	fastify.get(
-		"/protectedroute",
-		{
-			onRequest: [fastify.authenticate],
-		},
-		async (request, reply) => {
-			return {
-				id: request.user.id,
-				email: request.user.email,
-				username: request.user.username,
-			};
-		}
-	);
-
 	// google auth
 	async function verifyGoogleToken(token) {
 		const GOOGLE_PUBLIC_KEY_URL = "https://www.googleapis.com/oauth2/v1/certs";
@@ -425,7 +411,7 @@ async function routes(fastify, options) {
 					return { error: "User not found" };
 				}
 				let friends = result.friends ? JSON.parse(result.friends) : [];
-				const friendId = request.body.friendId.toString();
+				const friendId = request.body.friendId;
 				if (friends.includes(friendId)) {
 					reply.statusCode = 409;
 					return { error: "Friend already added", friends: friends };
@@ -473,7 +459,7 @@ async function routes(fastify, options) {
 					return { error: "User not found" };
 				}
 				let friends = result.friends ? JSON.parse(result.friends) : [];
-				const friendId = request.body.friendId.toString();
+				const friendId = request.body.friendId;
 				if (!friends.includes(friendId)) {
 					reply.statusCode = 409;
 					return { error: "Friend not found", friends: friends };
@@ -523,7 +509,7 @@ async function routes(fastify, options) {
 				let blocked_users = result.blocked_users
 					? JSON.parse(result.blocked_users)
 					: [];
-				const userId = request.body.userId.toString();
+				const userId = request.body.userId;
 				if (blocked_users.includes(userId)) {
 					reply.statusCode = 409;
 					return {
@@ -576,7 +562,7 @@ async function routes(fastify, options) {
 				let blocked_users = result.blocked_users
 					? JSON.parse(result.blocked_users)
 					: [];
-				const userId = request.body.userId.toString();
+				const userId = request.body.userId;
 				if (!blocked_users.includes(userId)) {
 					reply.statusCode = 409;
 					return {
