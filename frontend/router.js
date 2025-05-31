@@ -52,7 +52,7 @@ function handleRouteChange() {
             user.username || "Guest";
         document
             .getElementById("navAvatar")
-            .setAttribute("src", user.avatar || "default-avatar.png");
+            .setAttribute("src", user.avatar || "default-avatar.svg");
     }
     const viewId = routes[path] || "notFound";
     showView(viewId);
