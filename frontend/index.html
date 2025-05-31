@@ -1,55 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transcendence - Pong</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Transcendence</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <!-- Registration -->
-    <div id="registration">
-        <form id="registrationForm">
-            <input type="text" id="alias" placeholder="Alias" required />
-            <input type="email" id="emailReg" placeholder="Email" required />
-            <input type="password" id="passwordReg" placeholder="Password" required />
-            <button type="submit">Register</button>
-        </form>
-    </div>    
-    <!-- Login -->
-     <div id="login">
-        <form id="loginForm">
-            <input type="email" id="emailLogin" placeholder="Email" required />
-            <input type="password" id="passwordLogin" placeholder="Password" required />
-            <button type="submit">Login</button>
-        </form>
-     </div>
-    <!-- GAME SECTION -->
-    <h1 id="welcome-message">Welcome to Transcendence Pong</h1>
-    <canvas id="pongCanvas"></canvas>
-    <script src="pong.js"></script>
-
-	<!-- GOOGLE SIGN IN -->
-    <script src="https://accounts.google.com/gsi/client" async></script>
-	<script src="auth.js"></script>
-	<div id="g_id_onload"
-		data-client_id="244561649148-pbll9pc66oig5mcul4ivjp9igql4emef.apps.googleusercontent.com"
-		data-context="signin"
-		data-ux_mode="popup"
-		data-login_uri="http://localhost:3000/googleauth"
-		data-auto_prompt="false"
-		data-callback="handleGoogleCredentialResponse"
-		>
+	<!-- Navbar (on top), (data-* Attribute to store custom data, used here to prevent page refresh on click) -->
+	<nav id="navbar" class="bg-gray-800 text-white px-4 py-3 shadow-md z-50 relative hidden" >
+		<div class="max-w-7xl mx-auto flex items-center justify-between">
+			<!-- Left: Logo -->
+		  <div class="text-xl font-bold">Transcendence</div>
+		  <!-- Center: Tabs -->
+		   <div class="hidden md:flex space-x-4">
+			<a href="/tournament" data-link class="px-3 py-2 rounded-md hover:bg-gray-700">Tournament</a>
+			<a href="/game" data-link class="px-3 py-2 rounded-md hover:bg-gray-700">Game</a>
+		  </div>
+		  <!-- Right: User Info -->
+		<div class="hidden md:flex items-center space-x-3">
+			<span id="navUsername" class="text-sm text-gray-200">John Doe</span>
+			<img id="navAvatar" src="https://i.pravatar.cc/32" alt="Avatar" class="w-8 h-8 rounded-full border border-white" />
+			<button id="logoutBtn" class="text-sm text-red-400 hover:text-red-300 ml-2">
+				Logout
+			</button>
+		</div>
+		<!-- Mobile Menu Button -->
+		  <div class="md:hidden">
+			<button id="menuToggle" class="focus:outline-none">
+			  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+					  d="M4 6h16M4 12h16M4 18h16"/>
+			  </svg>
+			</button>
+		  </div>
+		</div>
+	  </nav>
+	  
+	  <!-- Loading Overlay (under the navbar) -->
+	  <div id="loading" class="fixed inset-0 pt-16 flex items-center justify-center bg-gray-100 z-40 route-view">
+		<div class="flex items-center justify-center space-x-2">
+		  <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
+		  <span class="text-gray-600">Loading...</span>
+		</div>
+	  </div>
+  	</div>
+	<!-- Login page-->
+	<div id="loginPage" class="route-view hidden flex items-center justify-center h-screen bg-gray-100"
+>
+		<div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-md w-full">
+			<h2 id="auth-form-title" class="text-2xl font-semibold mb-4">Login</h2>
+			<input
+			type="text"
+			id="auth-username"
+			placeholder="Username"
+			required
+			class="w-full p-2.5 mb-4 border border-gray-300 rounded hidden"
+			/>
+			<input
+			type="email"
+			id="auth-email"
+			placeholder="Email"
+			required
+			class="w-full p-2.5 mb-4 border border-gray-300 rounded"
+			/>
+			<input
+			type="password"
+			id="auth-password"
+			placeholder="Password"
+			required
+			class="w-full p-2.5 mb-4 border border-gray-300 rounded"
+			/>
+			<button
+			id="auth-button"
+			class="w-full py-2.5 bg-green-500 text-white font-medium rounded hover:bg-green-600 transition-colors"
+			>
+			Login
+			</button>
+			<p id="auth-message" class="text-red-500 mt-2"></p>
+			<p id="auth-toggle"
+			class="toggle mt-4 text-blue-500 hover:text-blue-700 cursor-pointer"
+			>
+			Don't have an account? Sign up
+			</p>
+		</div>
 	</div>
+	<!-- Tournament page-->
+	<div class="flex gap-6 route-view" id="tournamentPage">
+		<div class="w-1/4 bg-white p-4 rounded-2xl shadow">
+		<h2 class="text-xl font-bold mb-4">Tournaments</h2>
+		<ul id="tournamentList" class="space-y-2"></ul>
 
-	<div class="g_id_signin" data-locale="en"
-		data-type="standard"
-		data-shape="rectangular"
-		data-theme="outline"
-		data-text="signin_with"
-		data-size="large"
-		data-logo_alignment="left">
+		<form id="createTournamentForm" class="mt-6">
+			<input type="text" id="tournamentName" class="w-full p-2 border rounded mb-2" placeholder="New Tournament" required />
+			<button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Create</button>
+		</form>
+		</div>
+
+		<div class="flex-1 bg-white p-4 rounded-2xl shadow">
+		<h2 class="text-xl font-bold mb-4" id="selectedTournamentTitle">Select a tournament</h2>
+		<p id="statusMessage" class="mb-4 text-sm text-gray-600"></p>
+		<ul id="playerList" class="space-y-2 mb-4"></ul>
+
+		<div class="flex gap-4">
+			<button id="subscribeBtn" class="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 hidden">Subscribe</button>
+			<button id="startBtn" class="bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 hidden">Start Tournament</button>
+		</div>
+		</div>
 	</div>
-
+	<!-- 404 Page -->
+	<div id="notFound" class="route-view hidden flex flex-col items-center justify-center h-screen text-center text-red-500">
+		<h1 class="text-4xl font-bold mb-2">404</h1>
+		<p class="text-lg">Page not found</p>
+		<a href="/" data-link class="mt-4 text-blue-500 hover:underline">Go to Home</a>
+	</div>
+	<script type="module" src="router.js"></script>
+	<script type="module" src="/tournament/script.js"></script>
+	<script type="module" src="/login/script.js"></script>
 </body>
 </html>

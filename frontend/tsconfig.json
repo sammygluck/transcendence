@@ -4,8 +4,12 @@
     	"target": "ES6",
 		"lib": ["ES6", "DOM"],
 		"removeComments": true,
-		"skipLibCheck": true,
+		"skipLibCheck": true
 },
 	"include": ["**/*.ts"],
-	"exclude": ["node_modules"]
+	"exclude": [
+    "node_modules",
+    "dist",
+    "public"
+  ]
 }

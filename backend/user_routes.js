@@ -151,7 +151,7 @@ async function routes(fastify, options) {
 		}
 		try {
 			const result = await fastify.sqlite.get(
-				"SELECT id, email, password_hash, two_factor_auth, username, blocked_users, friends FROM users WHERE email = ?",
+				"SELECT id, email, password_hash, two_factor_auth, username, blocked_users, friends, avatar FROM users WHERE email = ?",
 				[request.body.email]
 			);
 			if (!result) {
@@ -214,6 +214,8 @@ async function routes(fastify, options) {
 				token: token,
 				blocked_users: result.blocked_users,
 				friends: result.friends,
+				avatar: result.avatar,
+				username: result.username,
 			};
 		} catch (error) {
 			reply.statusCode = 500;

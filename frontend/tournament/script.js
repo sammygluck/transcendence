@@ -1,4 +1,4 @@
-// Element references
+import { logout } from "../login/script.js";
 const tournamentList = document.getElementById("tournamentList");
 const createTournamentForm = document.getElementById("createTournamentForm");
 const tournamentNameInput = document.getElementById("tournamentName");
@@ -7,73 +7,82 @@ const playerList = document.getElementById("playerList");
 const subscribeBtn = document.getElementById("subscribeBtn");
 const startBtn = document.getElementById("startBtn");
 const statusMessage = document.getElementById("statusMessage");
-// State
 let tournaments = [];
 let selectedTournament = null;
-// Load user info
-const userInfoStr = localStorage.getItem("userInfo");
-if (!userInfoStr) {
-    window.location.href = "/login";
-}
-const userInfo = JSON.parse(userInfoStr);
-if (!userInfo || !userInfo.token) {
-    window.location.href = "/login";
-}
-// WebSocket setup
-const ws = new WebSocket(`ws://${window.location.host}/game?token=${userInfo.token}`);
-ws.addEventListener("error", (error) => {
-    console.error("WebSocket error:", error);
-});
-ws.addEventListener("close", (e) => {
-    switch (e.code) {
-        case 4000:
-            console.log("No token provided");
-            break;
-        case 4001:
-            console.log("Invalid token");
-            break;
-        default:
-            console.log("Disconnected from the server");
+let userInfo = null;
+let ws = null;
+function connectGameServer() {
+    const userInfoStr = localStorage.getItem("userInfo");
+    if (!userInfoStr) {
+        return;
     }
-    window.location.href = "/login";
-});
-ws.addEventListener("open", () => {
-    const msg = { type: "list_tournaments" };
-    ws.send(JSON.stringify(msg));
-});
-ws.addEventListener("message", (event) => {
-    const msg = JSON.parse(event.data);
-    console.log(msg);
-    if (msg.type === "tournaments") {
-        tournaments = msg.data;
-        renderTournamentList();
-        if (selectedTournament !== null) {
-            selectTournament(selectedTournament);
+    userInfo = JSON.parse(userInfoStr);
+    if (!userInfo || !userInfo.token) {
+        return;
+    }
+    if (ws) {
+        console.warn("Already connected to the game server");
+        return;
+    }
+    ws = new WebSocket(`ws://${window.location.host}/game?token=${userInfo.token}`);
+    ws.addEventListener("error", (error) => {
+        console.error("WebSocket error:", error);
+        disconnectGameServer();
+    });
+    ws.addEventListener("close", (e) => {
+        switch (e.code) {
+            case 4000:
+                console.log("No token provided");
+                break;
+            case 4001:
+                console.log("Invalid token");
+                break;
+            default:
+                console.log("Disconnected from the server");
         }
+        logout();
+    });
+    ws.addEventListener("open", () => {
+        const msg = { type: "list_tournaments" };
+        ws.send(JSON.stringify(msg));
+    });
+    ws.addEventListener("message", (event) => {
+        const msg = JSON.parse(event.data);
+        console.log(msg);
+        if (msg.type === "tournaments") {
+            tournaments = msg.data;
+            renderTournamentList();
+            if (selectedTournament !== null) {
+                selectTournament(selectedTournament);
+            }
+        }
+    });
+    createTournamentForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const name = tournamentNameInput.value.trim();
+        if (!name)
+            return;
+        const msg = { type: "create_tournament", name };
+        ws.send(JSON.stringify(msg));
+        tournamentNameInput.value = "";
+    });
+    subscribeBtn.addEventListener("click", subscribeBtnClick);
+    startBtn.addEventListener("click", startBtnClick);
+    console.log("Connected to the game server");
+}
+function disconnectGameServer() {
+    if (ws) {
+        ws.close();
+        ws = null;
+        console.log("Disconnected from the game server");
     }
-});
-// Form: create tournament
-createTournamentForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const name = tournamentNameInput.value.trim();
-    if (!name)
-        return;
-    const msg = { type: "create_tournament", name };
-    ws.send(JSON.stringify(msg));
-    tournamentNameInput.value = "";
-});
-// Subscribe to tournament
-subscribeBtn.addEventListener("click", () => {
-    if (selectedTournament === null)
-        return;
-    const msg = {
-        type: "subscribe",
-        tournament: selectedTournament,
-    };
-    ws.send(JSON.stringify(msg));
-});
-// Start tournament
-startBtn.addEventListener("click", () => {
+    selectedTournament = null;
+    tournaments = [];
+    renderTournamentList();
+    subscribeBtn.removeEventListener("click", subscribeBtnClick);
+    startBtn.removeEventListener("click", startBtnClick);
+}
+function startBtnClick() {
     if (selectedTournament === null)
         return;
     const msg = {
@@ -81,8 +90,16 @@ startBtn.addEventListener("click", () => {
         tournament: selectedTournament,
     };
     ws.send(JSON.stringify(msg));
-});
-// Render list of tournaments
+}
+function subscribeBtnClick() {
+    if (selectedTournament === null)
+        return;
+    const msg = {
+        type: "subscribe",
+        tournament: selectedTournament,
+    };
+    ws.send(JSON.stringify(msg));
+}
 function renderTournamentList() {
     tournamentList.innerHTML = "";
     tournaments.forEach((t) => {
@@ -93,7 +110,6 @@ function renderTournamentList() {
         tournamentList.appendChild(li);
     });
 }
-// Select a tournament
 function selectTournament(id) {
     console.log("Selected tournament:", id);
     selectedTournament = id;
@@ -110,7 +126,6 @@ function selectTournament(id) {
     statusMessage.textContent = tournament.started
         ? "🏁 This tournament is starting."
         : `Creator: ${tournament.creator.username}`;
-    // Render players
     playerList.innerHTML = "";
     tournament.players.forEach((player) => {
         const li = document.createElement("li");
@@ -118,9 +133,9 @@ function selectTournament(id) {
         li.className = "border p-2 rounded";
         playerList.appendChild(li);
     });
-    const isCreator = userInfo.id === tournament.creator.id;
+    const isCreator = userInfo && userInfo.id === tournament.creator.id;
     const playerIds = tournament.players.map((p) => p.id);
-    if (!tournament.started && !playerIds.includes(userInfo.id)) {
+    if (!tournament.started && userInfo && !playerIds.includes(userInfo.id)) {
         subscribeBtn.classList.remove("hidden");
     }
     else {
@@ -133,3 +148,7 @@ function selectTournament(id) {
         startBtn.classList.add("hidden");
     }
 }
+if (localStorage.getItem("userInfo")) {
+    connectGameServer();
+}
+export { connectGameServer, disconnectGameServer };

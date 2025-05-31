@@ -131,6 +131,11 @@ function sendDirectMessage(client, content, socket) {
 // game websocket route
 fastify.register(require("./game_management"));
 
+// Fallback to index.html for unknown routes (SPA support)
+fastify.setNotFoundHandler((req, reply) => {
+	return reply.sendFile('index.html');
+  });
+
 // Run the server!
 fastify.listen({ port: 3000 /*host: "0.0.0.0"*/ }, (err) => {
 	if (err) {
