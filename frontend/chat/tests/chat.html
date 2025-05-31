@@ -19,24 +19,22 @@
       flex-direction: row; /* Place live-chat and friend-chat side by side */
     }
     #chat-header {
-      background-color: #007bff;
-      color: white;
+      background-color: #27548a;
+      color: #dda853;
       padding: 10px;
       text-align: center;
       font-weight: bold;
-    }
-    #chat-content {
-      flex: 1;
-      overflow-y: auto;
     }
     #username {
       cursor: pointer;
     }
     .friend {
-	  cursor: pointer; /* Change cursor to pointer on hover */
+      width: 100%; /* Full width of the parent */
+      color: #183b4e;
+	    cursor: pointer; /* Change cursor to pointer on hover */
       position: relative; /* Ensure the button can be positioned relative to the friend container */
       padding: 5px;
-      border-bottom: 1px solid #ddd;
+      border-bottom: 1px solid #27548a;
     }
     .friend:hover {
       background-color: #f1f1f1;
@@ -47,12 +45,31 @@
       top: 50%;
       transform: translateY(-50%);
     }
-    #message-io {
+    .online {
+      width: 10px;
+      height: 10px;
+      border: 2px solid #183b4e;
+      border-radius: 50%;
       position: absolute;
-      bottom: 0; /* Align to the bottom */
-      left: 0; /* Align to the left edge of the parent */
-      right: 0; /* Align to the right edge of the parent */
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #00e100;
+    }
+    .offline {
+      width: 10px;
+      height: 10px;
+      border: 2px solid #183b4e;
+      border-radius: 50%;
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #F5EEDC;
+    }
+    .message-io {
       display: flex;
+      flex-direction: row;
       gap: 10px; /* Add spacing between input and button */
       padding: 10px; /* Add padding around the message container */
       border-top: 1px solid #ddd; /* Add a top border to separate from messages */
@@ -73,18 +90,32 @@
       box-sizing: border-box; /* Ensure padding doesn't affect width/height */
       position: relative; /* Make this the positioning context for #message-io */
     }
-    #friend-chat {
+    #friends-and-chat {
       flex: 1; /* Take up 1/3 of the width */
       display: flex;
       flex-direction: column; /* Maintain column layout inside */
       border: 1px solid #ddd; /* Add a small border */
       padding: 10px; /* Add inner padding */
       box-sizing: border-box; /* Ensure padding doesn't affect width/height */
+      position: relative;
     }
-    #live-chat-content {
-      flex: 1; /* Allow the content to take up available space */
+    #friend-chat{
+      flex: 1;
       display: flex;
       flex-direction: column;
+      overflow-y: auto;
+      min-height: 0;
+      box-sizing: border-box;
+      position: relative;
+    }
+    .chat-window {
+      position: relative;
+      flex: 1;
+      display: flex;
+      flex-direction: column-reverse;
+      overflow-y: auto;
+      min-height: 0;
+      box-sizing: border-box;
     }
     #search-bar {
       width: 100%;
@@ -97,19 +128,18 @@
   <div id="chat-block">
     <div id="live-chat">
       <h3 style="margin: 0;">Live Chat</h3>
-      <div id="live-chat-content">
-        <!-- Live chat messages will be dynamically populated -->
-        <div id="message-io">
-          <input
-            id="live-message-in"
-            type="text"
-            placeholder="Type a message..."
-          />
-          <button id="live-send-button">Send</button>
-        </div>
+      <!-- Live chat messages will be dynamically populated -->
+      <div id="live-chat-content" class="chat-window"></div>
+      <div class="message-io">
+        <input
+          id="live-message-in"
+          type="text"
+          placeholder="Type a message..."
+        />
+        <button id="live-send-button">Send</button>
       </div>
     </div>
-    <div id="friend-chat">
+    <div id="friends-and-chat">
       <div id="chat-header">
         <button id="back-button"><</button>
         <a id="user-header">Your Username</a>
@@ -123,13 +153,16 @@
       <!-- Friends list or chat content will be dynamically populated -->
       <div id="friend-list"></div>
       </div>
-      <div id="chat-content" style="display: none;">
-        <input
-          id="message-in"
-          type="text"
-          placeholder="Type a message..."
-        />
-        <button id="send-button">Send</button>
+      <div id="friend-chat">
+        <div id="chat-content" class="chat-window"></div>
+        <div class="message-io">
+         <input
+           id="message-in"
+           type="text"
+           placeholder="Type a message..."
+         />
+         <button id="send-button">Send</button>
+        </div>
       </div>
     </div>
   </div>

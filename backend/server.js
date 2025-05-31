@@ -81,13 +81,13 @@ fastify.register(async function (fastify) {
 					// Handle direct message
 					const destinationUser = await findUserById(destId);
 					if (!destinationUser) {
-						socket.send(JSON.stringify({ error: 'User is offline.' }));
+						socket.send(JSON.stringify({ type: "error", message:"[Server]: User is offline." }));
 						return;
 					}
 					sendDirectMessage(destinationUser, content, socket);
 				}
 			} catch (e) {
-				socket.send(JSON.stringify({ message: '[Server]: Invalid message format.' }));
+				socket.send(JSON.stringify({type: "error", message: '[Server]: Invalid message format.' }));
 			}
 		});
 		socket.on('close', () => {
@@ -99,11 +99,20 @@ fastify.register(async function (fastify) {
 
 // Helper functions
 function broadcastToLiveChat(content, socket) {
-	for (const client of chatClients) {
-		if (client.readyState === WebSocket.OPEN) {
-			client.send(JSON.stringify({ message: '[' + socket.user.username + "]: " + content.toString(), type: "public" }));
+	if (!socket){
+		for (const client of chatClients) {
+			if (client.readyState === WebSocket.OPEN) {
+				client.send(JSON.stringify({ message: "[System]: " + content.toString(), type: "public" }));
+			}
+		}
+	} else {
+		for (const client of chatClients) {
+			if (client.readyState === WebSocket.OPEN) {
+				client.send(JSON.stringify({ message: '[' + socket.user.username + "]: " + content.toString(), type: "public" }));
+			}
 		}
 	}
+	return null;
 }
 
 async function findUserById(userId) {

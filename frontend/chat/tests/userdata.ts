@@ -4,8 +4,8 @@ export interface User {
 	email: string;
 	created_at: string;
 	updated_at: string;
-	blocked_users: string[] | null;	//Change to number[] later
-	friends: string[] | null; 		//Change to number[] later
+	blocked_users: string | null;	//Change to number[] later
+	friends: string | null; 		//Change to number[] later
 	friendlist: Friend[];
 	avatar: string | null;
     online: boolean;
@@ -15,7 +15,8 @@ export interface Friend {
 	id: number;
 	username: string;
 	online: boolean;
-	message_history?: string[];
+	new_message: boolean| false;
+	chat_history?: string[];
 }
 
 
@@ -35,10 +36,12 @@ export async function fetchUserData(userID: number): Promise<User | null> {
 			throw new Error(`Error fetching user: ${userResponse.statusText}`);
 		}
 		const userData : User = await userResponse.json();
-
+		if (!userData.blocked_users) userData.blocked_users = '[]';
 		// Fetch friends' data
-		if (userData && userData.friends) {
-			const friendsPromises = userData.friends.map(async (friendId) => {
+		if (userData.friends) {
+			const friendDetails: Friend[] = await Promise.all(
+				// Remove the JSON.parse if friends is changed to number[]
+				JSON.parse(userData.friends).map(async (friendId: number) => {
 				const friendResponse = await fetch(`/user/${friendId}`, {
 					method: "GET",
 					headers: {
@@ -46,18 +49,16 @@ export async function fetchUserData(userID: number): Promise<User | null> {
 					},
 				});
 				if (!friendResponse.ok) {
-					throw new Error(
-						`Error fetching friend ${friendId}: ${friendResponse.statusText}`
-					);
+					throw new Error(`Error fetching friend ${friendId}: ${friendResponse.statusText}`);
 				}
 				const friendData = await friendResponse.json();
 				return {
 					id: friendData.id,
 					username: friendData.username,
 					online: friendData.online,
-				};
-			});
-			userData.friendlist = await Promise.all(friendsPromises);
+				} as Friend;
+			}));
+			userData.friendlist = friendDetails
 		} else if (!userData.friends) {
 			// If no friends, initialize friendlist as an empty array
 			userData.friendlist = [];
@@ -70,27 +71,4 @@ export async function fetchUserData(userID: number): Promise<User | null> {
 		alert("Failed to load user data. Please try again later.");
 	}
 	return null; 
-}
-
-
-const userInfoStr = localStorage.getItem("userInfo");
-if (!userInfoStr) {
-	window.location.href = "/login";
-}
-const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
-if (!userInfo) {
-	window.location.href = "/login";
-}
-
-/**
- * Updates the friends list every 10 seconds to check for new friends and their online status.
- */
-export function updateCurrentUserData(): void {
-	setInterval(async () => {
-		try {
-			await fetchUserData(userInfo.id);
-		} catch (error) {
-			console.error("Error updating friends list:", error);
-		}
-	}, 30000);
 }
