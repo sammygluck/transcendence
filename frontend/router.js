@@ -1,43 +1,74 @@
 const routes = {
-    '/home': 'home',
-    '/login': 'loginPage',
-    '/tournament': 'tournamentPage',
-    '/game': 'loading',
-    '/': 'loading',
-    '/404': 'notFound'
+    "/home": "home",
+    "/login": "loginPage",
+    "/tournament": "tournamentPage",
+    "/game": "loading",
+    "/": "loading",
+    "/404": "notFound",
 };
+function checkLoggedIn() {
+    const userInfo = localStorage.getItem("userInfo");
+    if (!userInfo) {
+        return null;
+    }
+    try {
+        const parsedUserInfo = JSON.parse(userInfo);
+        if (parsedUserInfo && parsedUserInfo.token) {
+            return parsedUserInfo;
+        }
+    }
+    catch (error) {
+        console.error("Error parsing user info:", error);
+        return null;
+    }
+}
 function showView(viewId) {
-    document.querySelectorAll('.route-view').forEach(el => {
-        el.classList.add('hidden');
+    document.querySelectorAll(".route-view").forEach((el) => {
+        el.classList.add("hidden");
     });
     if (!viewId) {
-        document.body.innerHTML = '<h1>404 - Not Found</h1>';
+        document.body.innerHTML = "<h1>404 - Not Found</h1>";
         return;
     }
     const view = document.getElementById(viewId);
     if (view) {
-        view.classList.remove('hidden');
+        view.classList.remove("hidden");
     }
     else {
-        document.body.innerHTML = '<h1>404 - Not Found</h1>';
+        document.body.innerHTML = "<h1>404 - Not Found</h1>";
     }
 }
 function handleRouteChange() {
-    const path = window.location.pathname;
-    const viewId = routes[path] || 'notFound';
+    let path = window.location.pathname;
+    const user = checkLoggedIn();
+    const navBar = document.getElementById("navbar");
+    if (!user) {
+        navBar?.classList.add("hidden");
+        path = "/login";
+    }
+    else {
+        navBar?.classList.remove("hidden");
+        document.getElementById("navUsername").textContent =
+            user.username || "Guest";
+        document
+            .getElementById("navAvatar")
+            .setAttribute("src", user.avatar || "default-avatar.png");
+    }
+    const viewId = routes[path] || "notFound";
     showView(viewId);
 }
-document.addEventListener('click', (e) => {
+document.addEventListener("click", (e) => {
     const target = e.target;
-    const link = target.closest('[data-link]');
+    const link = target.closest("[data-link]");
     if (link) {
         e.preventDefault();
-        const href = link.getAttribute('href');
+        const href = link.getAttribute("href");
         if (href) {
-            history.pushState({}, '', href);
+            history.pushState({}, "", href);
             handleRouteChange();
         }
     }
 });
-window.addEventListener('popstate', handleRouteChange);
-window.addEventListener('DOMContentLoaded', handleRouteChange);
+window.addEventListener("popstate", handleRouteChange);
+window.addEventListener("DOMContentLoaded", handleRouteChange);
+export { handleRouteChange };

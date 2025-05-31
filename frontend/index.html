@@ -9,14 +9,25 @@
 </head>
 <body>
 	<!-- Navbar (on top), (data-* Attribute to store custom data, used here to prevent page refresh on click) -->
-	<nav class="bg-gray-800 text-white px-4 py-3 shadow-md z-50 relative">
+	<nav id="navbar" class="bg-gray-800 text-white px-4 py-3 shadow-md z-50 relative hidden" >
 		<div class="max-w-7xl mx-auto flex items-center justify-between">
+			<!-- Left: Logo -->
 		  <div class="text-xl font-bold">Transcendence</div>
-		  <div class="space-x-4 hidden md:flex">
+		  <!-- Center: Tabs -->
+		   <div class="hidden md:flex space-x-4">
 			<a href="/login" data-link class="px-3 py-2 rounded-md hover:bg-gray-700">Login</a>
 			<a href="/tournament" data-link class="px-3 py-2 rounded-md hover:bg-gray-700">Tournament</a>
 			<a href="/game" data-link class="px-3 py-2 rounded-md hover:bg-gray-700">Game</a>
 		  </div>
+		  <!-- Right: User Info -->
+		<div class="hidden md:flex items-center space-x-3">
+			<span id="navUsername" class="text-sm text-gray-200">John Doe</span>
+			<img id="navAvatar" src="https://i.pravatar.cc/32" alt="Avatar" class="w-8 h-8 rounded-full border border-white" />
+			<button id="logoutBtn" class="text-sm text-red-400 hover:text-red-300 ml-2">
+				Logout
+			</button>
+		</div>
+		<!-- Mobile Menu Button -->
 		  <div class="md:hidden">
 			<button id="menuToggle" class="focus:outline-none">
 			  <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,39 +51,37 @@
 	<div id="loginPage" class="route-view hidden flex items-center justify-center h-screen bg-gray-100"
 >
 		<div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-md w-full">
-			<h2 id="form-title" class="text-2xl font-semibold mb-4">Login</h2>
+			<h2 id="auth-form-title" class="text-2xl font-semibold mb-4">Login</h2>
 			<input
 			type="text"
-			id="username"
+			id="auth-username"
 			placeholder="Username"
 			required
 			class="w-full p-2.5 mb-4 border border-gray-300 rounded hidden"
 			/>
 			<input
 			type="email"
-			id="email"
+			id="auth-email"
 			placeholder="Email"
 			required
 			class="w-full p-2.5 mb-4 border border-gray-300 rounded"
 			/>
 			<input
 			type="password"
-			id="password"
+			id="auth-password"
 			placeholder="Password"
 			required
 			class="w-full p-2.5 mb-4 border border-gray-300 rounded"
 			/>
 			<button
 			id="auth-button"
-			onclick="authenticate()"
 			class="w-full py-2.5 bg-green-500 text-white font-medium rounded hover:bg-green-600 transition-colors"
 			>
 			Login
 			</button>
-			<p id="message" class="text-red-500 mt-2"></p>
-			<p
+			<p id="auth-message" class="text-red-500 mt-2"></p>
+			<p id="auth-toggle"
 			class="toggle mt-4 text-blue-500 hover:text-blue-700 cursor-pointer"
-			onclick="toggleForm()"
 			>
 			Don't have an account? Sign up
 			</p>
@@ -107,8 +116,8 @@
 		<p class="text-lg">Page not found</p>
 		<a href="/" data-link class="mt-4 text-blue-500 hover:underline">Go to Home</a>
 	</div>
-	<script src="router.js"></script>
-	<script src="/tournament/script.js"></script>
-	<script src="/login/script.js"></script>
+	<script type="module" src="router.js"></script>
+	<script type="module" src="/tournament/script.js"></script>
+	<script type="module" src="/login/script.js"></script>
 </body>
 </html>

@@ -1,10 +1,11 @@
+import { handleRouteChange } from "../router.js";
 let isLogin = true;
 function toggleForm() {
     isLogin = !isLogin;
-    const formTitle = document.getElementById("form-title");
+    const formTitle = document.getElementById("auth-form-title");
     const authButton = document.getElementById("auth-button");
     const toggleText = document.querySelector(".toggle");
-    const usernameField = document.getElementById("username");
+    const usernameField = document.getElementById("auth-username");
     if (formTitle) {
         formTitle.textContent = isLogin ? "Login" : "Sign Up";
     }
@@ -12,17 +13,19 @@ function toggleForm() {
         authButton.textContent = isLogin ? "Login" : "Sign Up";
     }
     if (toggleText) {
-        toggleText.textContent = isLogin ? "Don't have an account? Sign up" : "Already have an account? Login";
+        toggleText.textContent = isLogin
+            ? "Don't have an account? Sign up"
+            : "Already have an account? Login";
     }
     if (usernameField) {
         usernameField.style.display = isLogin ? "none" : "block";
     }
 }
 async function authenticate() {
-    const usernameInput = document.getElementById("username");
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
-    const messageElem = document.getElementById("message");
+    const usernameInput = document.getElementById("auth-username");
+    const emailInput = document.getElementById("auth-email");
+    const passwordInput = document.getElementById("auth-password");
+    const messageElem = document.getElementById("auth-message");
     if (!emailInput || !passwordInput || !messageElem) {
         console.error("Missing required form elements");
         return;
@@ -43,13 +46,19 @@ async function authenticate() {
         const data = await response.json();
         if (response.ok) {
             messageElem.style.color = "green";
-            messageElem.textContent = isLogin ? "Login successful!" : "Signup successful!";
-            localStorage.setItem("userInfo", JSON.stringify(data));
-            localStorage.setItem("token", data.token);
+            messageElem.textContent = isLogin
+                ? "Login successful!"
+                : "Signup successful!";
+            if (isLogin && data.token) {
+                localStorage.setItem("userInfo", JSON.stringify(data));
+                localStorage.setItem("token", data.token);
+                handleRouteChange();
+            }
         }
         else {
             messageElem.style.color = "red";
-            messageElem.textContent = data.message || (isLogin ? "Login failed!" : "Signup failed!");
+            messageElem.textContent =
+                data.message || (isLogin ? "Login failed!" : "Signup failed!");
         }
     }
     catch (error) {
@@ -62,9 +71,19 @@ function logout() {
     localStorage.removeItem("userInfo");
     localStorage.removeItem("token");
 }
-let passwordField = document.getElementById("password");
-passwordField.addEventListener("keydown", e => {
+let passwordField = document.getElementById("auth-password");
+passwordField.addEventListener("keydown", (e) => {
     if (e.code === "Enter") {
         authenticate();
     }
+});
+document.getElementById("auth-button").addEventListener("click", () => {
+    authenticate();
+});
+document.getElementById("auth-toggle").addEventListener("click", () => {
+    toggleForm();
+});
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    logout();
+    handleRouteChange();
 });

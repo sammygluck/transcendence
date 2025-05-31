@@ -55,21 +55,22 @@ const statusMessage = document.getElementById("statusMessage") as HTMLElement;
 let tournaments: Tournament[] = [];
 let selectedTournament: number | null = null;
 let userInfo: UserInfo | null = null;
+let ws: WebSocket | null = null;
 
 function connectGameServer(): void {
 	// This function is called to connect to the game server
 	// Load user info
 	const userInfoStr = localStorage.getItem("userInfo");
 	if (!userInfoStr) {
-		window.location.href = "/login";
+		return;
 	}
 	userInfo = JSON.parse(userInfoStr!);
 	if (!userInfo || !userInfo.token) {
-		window.location.href = "/login";
+		return;
 	}
 
 	// WebSocket setup
-	const ws = new WebSocket(
+	ws = new WebSocket(
 		`ws://${window.location.host}/game?token=${userInfo.token}`
 	);
 
@@ -88,7 +89,11 @@ function connectGameServer(): void {
 			default:
 				console.log("Disconnected from the server");
 		}
-		window.location.href = "/login";
+		disconnectGameServer();
+		/*console.log("Reconnecting in 5 seconds...");
+		setTimeout(() => {
+			connectGameServer();
+		}, 5000);*/
 	});
 
 	ws.addEventListener("open", () => {
@@ -121,26 +126,43 @@ function connectGameServer(): void {
 	});
 
 	// Subscribe to tournament
-	subscribeBtn.addEventListener("click", () => {
-		if (selectedTournament === null) return;
-
-		const msg: ClientMessage = {
-			type: "subscribe",
-			tournament: selectedTournament,
-		};
-		ws.send(JSON.stringify(msg));
-	});
+	subscribeBtn.addEventListener("click", subscribeBtnClick);
 
 	// Start tournament
-	startBtn.addEventListener("click", () => {
-		if (selectedTournament === null) return;
+	startBtn.addEventListener("click", startBtnClick);
+	console.log("Connected to the game server");
+}
 
-		const msg: ClientMessage = {
-			type: "start_tournament",
-			tournament: selectedTournament,
-		};
-		ws.send(JSON.stringify(msg));
-	});
+function disconnectGameServer(): void {
+	if (ws) {
+		ws.close();
+		ws = null;
+	}
+	selectedTournament = null;
+	tournaments = [];
+	renderTournamentList();
+	console.log("Disconnected from the game server");
+
+	subscribeBtn.removeEventListener("click", subscribeBtnClick);
+	startBtn.removeEventListener("click", subscribeBtnClick);
+}
+
+function startBtnClick(): void {
+	if (selectedTournament === null) return;
+	const msg: ClientMessage = {
+		type: "start_tournament",
+		tournament: selectedTournament,
+	};
+	ws.send(JSON.stringify(msg));
+}
+
+function subscribeBtnClick(): void {
+	if (selectedTournament === null) return;
+	const msg: ClientMessage = {
+		type: "subscribe",
+		tournament: selectedTournament,
+	};
+	ws.send(JSON.stringify(msg));
 }
 
 // Render list of tournaments
@@ -199,3 +221,5 @@ function selectTournament(id: number): void {
 		startBtn.classList.add("hidden");
 	}
 }
+
+export { connectGameServer, disconnectGameServer };
