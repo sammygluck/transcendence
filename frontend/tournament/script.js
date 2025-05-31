@@ -1,3 +1,4 @@
+import { logout } from "../login/script.js";
 const tournamentList = document.getElementById("tournamentList");
 const createTournamentForm = document.getElementById("createTournamentForm");
 const tournamentNameInput = document.getElementById("tournamentName");
@@ -22,6 +23,7 @@ function connectGameServer() {
     ws = new WebSocket(`ws://${window.location.host}/game?token=${userInfo.token}`);
     ws.addEventListener("error", (error) => {
         console.error("WebSocket error:", error);
+        disconnectGameServer();
     });
     ws.addEventListener("close", (e) => {
         switch (e.code) {
@@ -34,7 +36,7 @@ function connectGameServer() {
             default:
                 console.log("Disconnected from the server");
         }
-        disconnectGameServer();
+        logout();
     });
     ws.addEventListener("open", () => {
         const msg = { type: "list_tournaments" };
@@ -74,7 +76,7 @@ function disconnectGameServer() {
     renderTournamentList();
     console.log("Disconnected from the game server");
     subscribeBtn.removeEventListener("click", subscribeBtnClick);
-    startBtn.removeEventListener("click", subscribeBtnClick);
+    startBtn.removeEventListener("click", startBtnClick);
 }
 function startBtnClick() {
     if (selectedTournament === null)
@@ -141,5 +143,8 @@ function selectTournament(id) {
     else {
         startBtn.classList.add("hidden");
     }
+}
+if (localStorage.getItem("userInfo")) {
+    connectGameServer();
 }
 export { connectGameServer, disconnectGameServer };

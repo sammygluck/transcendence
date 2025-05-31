@@ -1,3 +1,5 @@
+import { logout } from "../login/script.js";
+
 interface Player {
 	id: number;
 	username: string;
@@ -76,6 +78,7 @@ function connectGameServer(): void {
 
 	ws.addEventListener("error", (error) => {
 		console.error("WebSocket error:", error);
+		disconnectGameServer();
 	});
 
 	ws.addEventListener("close", (e) => {
@@ -89,7 +92,7 @@ function connectGameServer(): void {
 			default:
 				console.log("Disconnected from the server");
 		}
-		disconnectGameServer();
+		logout();
 		/*console.log("Reconnecting in 5 seconds...");
 		setTimeout(() => {
 			connectGameServer();
@@ -144,7 +147,7 @@ function disconnectGameServer(): void {
 	console.log("Disconnected from the game server");
 
 	subscribeBtn.removeEventListener("click", subscribeBtnClick);
-	startBtn.removeEventListener("click", subscribeBtnClick);
+	startBtn.removeEventListener("click", startBtnClick);
 }
 
 function startBtnClick(): void {
@@ -220,6 +223,11 @@ function selectTournament(id: number): void {
 	} else {
 		startBtn.classList.add("hidden");
 	}
+}
+
+// if logged in on page load, connect to the game server
+if (localStorage.getItem("userInfo")) {
+	connectGameServer();
 }
 
 export { connectGameServer, disconnectGameServer };

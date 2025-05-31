@@ -1,4 +1,8 @@
 import { handleRouteChange } from "../router.js";
+import {
+	connectGameServer,
+	disconnectGameServer,
+} from "../tournament/script.js";
 
 let isLogin: boolean = true;
 
@@ -76,6 +80,7 @@ async function authenticate(): Promise<void> {
 				localStorage.setItem("userInfo", JSON.stringify(data));
 				localStorage.setItem("token", data.token);
 				handleRouteChange(); // Update the view after successful auth
+				connectGameServer(); // Connect to the game server after login
 			}
 		} else {
 			messageElem.style.color = "red";
@@ -92,6 +97,8 @@ async function authenticate(): Promise<void> {
 function logout(): void {
 	localStorage.removeItem("userInfo");
 	localStorage.removeItem("token");
+	disconnectGameServer(); // Disconnect from the game server
+	handleRouteChange(); // Update the view after logout
 }
 
 let passwordField = document.getElementById("auth-password");
@@ -112,5 +119,6 @@ document.getElementById("auth-toggle").addEventListener("click", () => {
 //logout button in navbar
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
 	logout();
-	handleRouteChange(); // Update the view after logout
 });
+
+export { logout };

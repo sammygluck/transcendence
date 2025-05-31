@@ -1,4 +1,5 @@
 import { handleRouteChange } from "../router.js";
+import { connectGameServer, disconnectGameServer, } from "../tournament/script.js";
 let isLogin = true;
 function toggleForm() {
     isLogin = !isLogin;
@@ -53,6 +54,7 @@ async function authenticate() {
                 localStorage.setItem("userInfo", JSON.stringify(data));
                 localStorage.setItem("token", data.token);
                 handleRouteChange();
+                connectGameServer();
             }
         }
         else {
@@ -70,6 +72,8 @@ async function authenticate() {
 function logout() {
     localStorage.removeItem("userInfo");
     localStorage.removeItem("token");
+    disconnectGameServer();
+    handleRouteChange();
 }
 let passwordField = document.getElementById("auth-password");
 passwordField.addEventListener("keydown", (e) => {
@@ -85,5 +89,5 @@ document.getElementById("auth-toggle").addEventListener("click", () => {
 });
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
     logout();
-    handleRouteChange();
 });
+export { logout };
