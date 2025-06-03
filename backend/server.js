@@ -4,7 +4,7 @@ const secret = "superSecretStringForJWT"; // move to .env file
 const fastify = require("fastify")({ logger: true }); // Require the framework and instantiate it
 const path = require("node:path");
 const jwt = require("jsonwebtoken");
-const WebSocket = require('ws');
+const WebSocket = require("ws");
 
 const pong_server = require("./pong_server");
 
@@ -24,6 +24,7 @@ fastify.register(require("@fastify/multipart")); // parse multipart/form-data bo
 
 //subfiles for routes
 fastify.register(require("./user_routes").routes);
+fastify.register(require("./history_routes").routes);
 
 // Declare a route
 /*fastify.get("/", function handler(request, reply) {
@@ -48,9 +49,9 @@ fastify.register(async function (fastify) {
 });
 
 // websocket chat route
-const chatClients = require('./user_routes').chatClients; // import the chatClients set from user_routes.js
+const chatClients = require("./user_routes").chatClients; // import the chatClients set from user_routes.js
 fastify.register(async function (fastify) {
-	fastify.get('/chat', { websocket: true }, (socket, req) => {
+	fastify.get("/chat", { websocket: true }, (socket, req) => {
 		// authenticate the user
 		const token = req.query.token;
 		if (!token) {
@@ -67,7 +68,7 @@ fastify.register(async function (fastify) {
 		if (!socket.user) return;
 		chatClients.add(socket);
 		console.log("Client connected to chat");
-		socket.on('message', async (wsmessage) => {
+		socket.on("message", async (wsmessage) => {
 			try {
 				const parsedMessage = JSON.parse(wsmessage);
 				const destId = parsedMessage.destId;
@@ -76,21 +77,30 @@ fastify.register(async function (fastify) {
 				if (destId === 0) {
 					// Handle live chat message
 					broadcastToLiveChat(content, socket);
-
 				} else {
 					// Handle direct message
 					const destinationUser = await findUserById(destId);
 					if (!destinationUser) {
-						socket.send(JSON.stringify({ type: "error", message:"[Server]: User is offline." }));
+						socket.send(
+							JSON.stringify({
+								type: "error",
+								message: "[Server]: User is offline.",
+							})
+						);
 						return;
 					}
 					sendDirectMessage(destinationUser, content, socket);
 				}
 			} catch (e) {
-				socket.send(JSON.stringify({type: "error", message: '[Server]: Invalid message format.' }));
+				socket.send(
+					JSON.stringify({
+						type: "error",
+						message: "[Server]: Invalid message format.",
+					})
+				);
 			}
 		});
-		socket.on('close', () => {
+		socket.on("close", () => {
 			chatClients.delete(socket);
 			console.log("Client disconnected from chat");
 		});
@@ -99,16 +109,26 @@ fastify.register(async function (fastify) {
 
 // Helper functions
 function broadcastToLiveChat(content, socket) {
-	if (!socket){
+	if (!socket) {
 		for (const client of chatClients) {
 			if (client.readyState === WebSocket.OPEN) {
-				client.send(JSON.stringify({ message: "[System]: " + content.toString(), type: "public" }));
+				client.send(
+					JSON.stringify({
+						message: "[System]: " + content.toString(),
+						type: "public",
+					})
+				);
 			}
 		}
 	} else {
 		for (const client of chatClients) {
 			if (client.readyState === WebSocket.OPEN) {
-				client.send(JSON.stringify({ message: '[' + socket.user.username + "]: " + content.toString(), type: "public" }));
+				client.send(
+					JSON.stringify({
+						message: "[" + socket.user.username + "]: " + content.toString(),
+						type: "public",
+					})
+				);
 			}
 		}
 	}
@@ -117,15 +137,30 @@ function broadcastToLiveChat(content, socket) {
 
 async function findUserById(userId) {
 	for (const client of chatClients) {
-		if (parseInt(client.user.id) === parseInt(userId) && client.readyState === WebSocket.OPEN) {
+		if (
+			parseInt(client.user.id) === parseInt(userId) &&
+			client.readyState === WebSocket.OPEN
+		) {
 			return client;
 		}
 	}
 }
 
 function sendDirectMessage(client, content, socket) {
-	client.send(JSON.stringify({ sendId: socket.user.id, message: "[" + socket.user.username + "]: " + content.toString(), type: "private"}));
-	socket.send(JSON.stringify({ sendId: client.user.id, message: "[" + socket.user.username + "]: " + content.toString(), type: "private"}));
+	client.send(
+		JSON.stringify({
+			sendId: socket.user.id,
+			message: "[" + socket.user.username + "]: " + content.toString(),
+			type: "private",
+		})
+	);
+	socket.send(
+		JSON.stringify({
+			sendId: client.user.id,
+			message: "[" + socket.user.username + "]: " + content.toString(),
+			type: "private",
+		})
+	);
 }
 
 // game websocket route
@@ -133,8 +168,8 @@ fastify.register(require("./game_management"));
 
 // Fallback to index.html for unknown routes (SPA support)
 fastify.setNotFoundHandler((req, reply) => {
-	return reply.sendFile('index.html');
-  });
+	return reply.sendFile("index.html");
+});
 
 // Run the server!
 fastify.listen({ port: 3000 /*host: "0.0.0.0"*/ }, (err) => {

@@ -8,6 +8,7 @@
 	"author": "",
 	"license": "ISC",
 	"description": "",
+	"type": "commonjs",
 	"dependencies": {
 		"@fastify/formbody": "^8.0.2",
 		"@fastify/jwt": "^9.0.4",
