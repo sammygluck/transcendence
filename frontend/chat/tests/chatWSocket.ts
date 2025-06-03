@@ -1,5 +1,4 @@
-import { parse } from "path";
-import {User, Friend, fetchUserData} from "./userdata.js";
+import {User, Friend, fetchUserData, addFriend} from "./userdata.js";
 
 const LChatContent = document.getElementById("live-chat-content") as HTMLElement;
 const LmessageIn = document.getElementById("live-message-in") as HTMLInputElement;
@@ -25,7 +24,7 @@ if (!userInfo) {
 	window.location.href = "/login";
 }
 let currentUserData: User;
-let selectedFriend: number = 0;
+let selectedFriend: number = 0; // 0 means no friend selected, -1 is system
 initializeChat();
 
 const ws = new WebSocket(
@@ -59,18 +58,27 @@ ws.onmessage = (event) => {
         message.onclick = () => openProfile(parsedData.sendId);
         LChatContent.prepend(message);
     } else if (parsedData.type === "private") {
-        currentUserData.friendlist.forEach((friend: Friend) => {
-            if (friend.id === parsedData.sendId) {
-                const messageContent = parsedData.message;
-                friend.chat_history?.push(messageContent);
-                if (selectedFriend === friend.id) {
-                    loadChatHistory(friend.id);
-                } else {
-                    friend.new_message = true;
-                    loadFriendList();
-                }
+        const friend = currentUserData.friendlist.find(friend => friend.id === parsedData.sendId);
+        if (friend) {
+            const messageContent = parsedData.message;
+            friend.chat_history?.push(messageContent);
+            if (selectedFriend === friend.id) {
+                loadChatHistory(friend.id);
+            } else {
+                friend.new_message = true;
+                loadFriendList();
             }
-        });
+        } else if (!friend) {
+            const friend = currentUserData.friendlist.find(friend => friend.id === -1);
+            console.log("UserId ", parsedData.sendId);
+            friend.chat_history?.push(`${parsedData.sendId}` + "::" + parsedData.message);
+            if (selectedFriend === friend.id) {
+                loadChatHistory(friend.id);
+            } else {
+                friend.new_message = true;
+                loadFriendList();
+            }
+        }
     }
     else if (parsedData.type === "error"){
         const friend = currentUserData.friendlist.find(friend => friend.id === selectedFriend);
@@ -101,6 +109,14 @@ async function initializeChat(): Promise<void> {
     currentUserData.friendlist.forEach((friend: Friend) => {
         friend.chat_history = [];
     });
+    currentUserData.friendlist.unshift({
+        id: -1, // System ID
+        username: "System",
+        online: false,
+        new_message: false,
+        chat_history: []
+    } as Friend); // Add system as first friend
+
     friendChat.style.display = "none";
     backButton.style.display = "none";
     friends.style.display = "block";
@@ -189,15 +205,24 @@ function loadFriendList(friendsArray: Friend[] | null = null) {
 
 	friendList.innerHTML = ""; // Clear the list
 	friendsArray.forEach((friend) => {
-		const friendItem = document.createElement("div");
-        const statusIcon = document.createElement("span");
-        statusIcon.classList.add(friend.online ? "online" : "offline");
-		friendItem.className = "friend";
-		friendItem.textContent = friend.username;
-        friendItem.style.fontWeight = friend.new_message? "bold": "normal";
-        friendItem.appendChild(statusIcon);
-    	friendItem.onclick = () => openChat(friend.id);
-    	friendList.appendChild(friendItem);
+        if (friend.id === -1) {
+            const sysItem = document.createElement("div");
+            sysItem.className = "friend";
+            sysItem.textContent = "System";
+            sysItem.style.fontWeight = friend.new_message ? "bold" : "normal";
+            sysItem.onclick = () => openChat(friend.id);
+            friendList.appendChild(sysItem);
+        } else {
+		    const friendItem = document.createElement("div");
+            const statusIcon = document.createElement("span");
+            statusIcon.classList.add(friend.online ? "online" : "offline");
+		    friendItem.className = "friend";
+		    friendItem.textContent = friend.username;
+            friendItem.style.fontWeight = friend.new_message? "bold": "normal";
+            friendItem.appendChild(statusIcon);
+    	    friendItem.onclick = () => openChat(friend.id);
+    	    friendList.appendChild(friendItem);
+        }
 	});
 }
 
@@ -215,6 +240,25 @@ function displayDummy(username: string) {
     friendList.appendChild(dummy);
 }
 
+async function sendFriendRequest(username: string) {
+    try {
+        const response = await fetch(`/search/${username}`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${userInfo.token}`,
+            },
+        });
+        if (!response.ok) {
+            throw new Error(`Error searching for user: ${response.statusText}`);
+        }
+        const friendData = await response.json();
+        console.log("Friend Data: ", friendData);
+        addFriend(friendData.id);
+    } catch (error) {
+        alert("Failed to send friend request. Please try again later.");
+    }
+}
+
 function openChat(friendId: number) {
     friends.style.display = "none";
     backButton.style.display = "block";
@@ -222,7 +266,15 @@ function openChat(friendId: number) {
 
     selectedFriend = friendId;
     updateChatHeader(friendId);
-    loadChatHistory(friendId);
+    if (friendId === -1) {
+        messageIn.style.display = "none";
+        sendButton.style.display = "none";
+        loadSystemChat();
+    } else {
+        messageIn.style.display = "block";
+        sendButton.style.display = "block";
+        loadChatHistory(friendId);
+    }
 }
 
 function loadChatHistory(friendId: number) {
@@ -237,7 +289,28 @@ function loadChatHistory(friendId: number) {
             chatContent.prepend(messageElement);
         });
     } else {
-        chatContent.innerHTML = "<p>No chat history available</p>";
+        chatContent.textContent = "No chat history available";
+    }
+}
+
+function loadSystemChat() {
+    chatContent.innerHTML = ""; // Clear previous chat content
+    chatContent.className = "chat-window";
+    const systemData = currentUserData.friendlist.find(friend => friend.id === -1);
+    systemData.new_message = false;
+    if (systemData.chat_history) {
+        systemData.chat_history.forEach((element) => {
+            console.log("Element: ", element);
+            const messageElement = document.createElement("div");
+            const sendId = element.split("::")[0];
+            const message = element.split("::")[1];
+            messageElement.textContent = message;
+            messageElement.onclick = () => openProfile(parseInt(sendId));
+            chatContent.prepend(messageElement);
+        });
+    }
+    else {
+        chatContent.textContent = "No system messages available";
     }
 }
 
@@ -249,6 +322,7 @@ function updateCurrentUserData(): void {
 	setInterval(async () => {
 		try {
 			const updatedData = await fetchUserData(userInfo.id);
+            updatedData.friendlist.unshift({id: -1, username: "System", online: false, new_message: false, chat_history: []} as Friend);
             updatedData.friendlist.forEach((friend: Friend) => {
                 const existingFriend = currentUserData.friendlist.find(userId => userId.id === friend.id);
                 if (existingFriend.chat_history)
@@ -270,9 +344,4 @@ function updateCurrentUserData(): void {
 function openProfile(friendId: number) {
     alert("Open profile for friend ID: " + friendId);
     console.log("Open profile for friend ID:", friendId);
-}
-
-function sendFriendRequest(username: string) {
-    alert("Send friend request to username: " + username);
-    console.log("Send friend request to username:", username);
 }

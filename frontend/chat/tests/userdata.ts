@@ -63,12 +63,78 @@ export async function fetchUserData(userID: number): Promise<User | null> {
 			// If no friends, initialize friendlist as an empty array
 			userData.friendlist = [];
 		}
-		console.log("UserID ",userID," data fetched:", userData);
-		console.log("Friends list updated:", userData.friendlist);
 		return userData;
 	} catch (error) {
 		console.error("Error fetching user data:", error);
 		alert("Failed to load user data. Please try again later.");
 	}
 	return null; 
+}
+
+export async function addFriend(userID: number): Promise<void> {
+	try {
+		const response = await fetch(`/friend`, {
+			method: "POST",
+			headers: {
+				Autherization: `Bearer ${localStorage.getItem("token")}`,
+			},
+			body: JSON.stringify({ friendId: userID }),
+		});
+		if (!response.ok) {
+			throw new Error(`Error adding friend: ${response.statusText}`);
+		}
+	} catch (error) {
+		alert("Failed to add friend. Please try again later.");
+	}
+}
+
+export async function removeFriend(userID: number): Promise<void> {
+	try {
+		const response = await fetch(`/friend`, {
+			method: "DELETE",
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem("token")}`,
+			},
+			body: JSON.stringify({ friendId: userID }),
+		});
+		if (!response.ok) {
+			throw new Error(`Error removing friend: ${response.statusText}`);
+		}
+	} catch (error) {
+		alert("Failed to remove friend. Please try again later.");
+	}
+}
+
+export async function blockUser(userID: number): Promise<void> {
+	try {
+		const response = await fetch(`/block`, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem("token")}`,
+			},
+			body: JSON.stringify({ userId: userID }),
+		});
+		if (!response.ok) {
+			throw new Error(`Error blocking user: ${response.statusText}`);
+		}
+	} catch (error) {
+		alert("Failed to block user. Please try again later.");
+	}
+}
+
+export async function unblockUser(userID: number): Promise<void> {
+	try {
+		const response = await fetch(`/block`, {
+			method: "DELETE",
+			headers: {
+				Authorization: `Bearer ${localStorage.getItem("token")}`,
+			},
+			body: JSON.stringify({ userId: userID }),
+		});
+		if (!response.ok) {
+			throw new Error(`Error unblocking user: ${response.statusText}`);
+		}
+	} catch (error) {
+		alert("Failed to unblock user. Please try again later.");
+	}
 }
