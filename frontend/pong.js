@@ -34,14 +34,17 @@ class Ball {
     radius;
     speedX;
     speedY;
+    prevX;
     constructor(x, y, radius, speed) {
         this.x = x;
         this.y = y;
         this.radius = radius;
         this.speedX = speed;
         this.speedY = speed;
+        this.prevX = x;
     }
     move(duration) {
+        this.prevX = this.x;
         this.x += this.speedX * duration / 1000;
         this.y += this.speedY * duration / 1000;
         if ((this.y - this.radius <= 0 && this.speedY < 0) || (this.y + this.radius >= 100 && this.speedY > 0)) {
@@ -49,11 +52,19 @@ class Ball {
         }
     }
     checkCollision(paddle) {
-        if (this.y >= paddle.y && this.y <= paddle.y + paddle.height) {
-            if (this.speedX < 0 && paddle.x < 50 && this.x - this.radius <= paddle.x + paddle.width) {
+        if (this.y < paddle.y || this.y > paddle.y + paddle.height)
+            return;
+        if (this.speedX < 0 && paddle.x < 50) {
+            const edge = paddle.x + paddle.width;
+            if (this.prevX - this.radius > edge && this.x - this.radius <= edge) {
+                this.x = edge + this.radius;
                 this.speedX *= -1;
             }
-            else if (this.speedX > 0 && paddle.x > 50 && this.x + this.radius >= paddle.x) {
+        }
+        else if (this.speedX > 0 && paddle.x > 50) {
+            const edge = paddle.x;
+            if (this.prevX + this.radius < edge && this.x + this.radius >= edge) {
+                this.x = edge - this.radius;
                 this.speedX *= -1;
             }
         }
