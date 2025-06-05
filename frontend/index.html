@@ -109,6 +109,73 @@
 		</div>
 		</div>
 	</div>
+	<!-- chat -->
+	<div
+	id="chat-block" class="absolute bottom-[5%] left-1/2 transform -translate-x-1/2 w-2/3 h-[400px] border border-blue-950 bg-amber-50 flex flex-row hidden">
+	<!-- Live Chat -->
+	<div
+	  id="live-chat" class="flex flex-col flex-[2] border border-blue-950 p-2 box-border relative">
+	  <h2 class="pb-2 font-bold text-blue-950 border-b border-blue-950">Live Chat</h2>
+	  <div
+		id="live-chat-content" class="flex-1 flex flex-col-reverse overflow-y-scroll min-h-0 break-all relative"></div>
+	  <div
+		class="message-io flex flex-row gap-2 p-2 border-t border-blue-950 box-border">
+		<input
+		  id="live-message-in"
+		  type="text"
+		  placeholder="Type a message..."
+		  class="flex-1 p-2 border border-blue-950 rounded bg-amber-50 text-blue-950"
+		/>
+		<button
+		  id="live-send-button" class="px-4 py-2 bg-blue-900 text-amber-400 font-bold rounded hover:brightness-90">
+		  Send
+		</button>
+	  </div>
+	</div>
+
+	<!-- Friends and Chat -->
+	<div
+	  id="friends-and-chat" class="flex flex-col flex-[1] border border-blue-950 p-2 box-border relative">
+	  <div id="chat-header" class="flex flex-row bg-blue-900 text-amber-400 p-2 items-center font-bold">
+		<button id="back-button" class="left-2 hover:cursor-pointer">&lt;</button>
+		<a id="user-header" class="mx-auto hover:cursor-pointer">Your Username</a>
+	  </div>
+	  <div id="friends" class="flex flex-col">
+		<input
+		  id="search-bar"
+		  type="text"
+		  placeholder="Search friends..."
+		  class="w-full my-2 p-2 border border-blue-950 rounded bg-amber-50 text-blue-950"
+		/>
+		<div id="friend-list"></div>
+	  </div>
+	  <div id="friend-chat" class="flex flex-col flex-1 overflow-y-auto min-h-0 box-border relative">
+		<div id="chat-content" class="chat-window flex-1 flex flex-col-reverse overflow-y-scroll min-h-0 break-all box-border relative"></div>
+		<div class="message-io flex flex-row gap-2 p-2 border-t border-blue-950 box-border">
+		  <input
+			id="message-in"
+			type="text"
+			placeholder="Type a message..."
+			class="flex-1 p-2 border border-blue-950 rounded bg-amber-50 text-blue-950"
+		  />
+		  <button
+			id="send-button" class="px-4 py-2 bg-blue-900 text-amber-400 font-bold rounded hover:brightness-90">
+			Send
+		  </button>
+		</div>
+	  </div>
+	  <div id="context-menu" class="absolute text-center bg-amber-50 border border-blue-950 rounded-md hidden">
+		<ul class="p-0 m-0 min-w-[150px] list-none">
+		  <li id="view-profile" class="py-2 border border-blue-950 rounded-t-md hover:bg-amber-100 hover:text-blue-950">
+			View Profile
+		  </li>
+		  <li id="invite-user" class="py-2 border border-blue-950 rounded-b-md hover:bg-amber-100 hover:text-blue-950">
+			Invite User
+		  </li>
+		</ul>
+	  </div>
+	</div>
+  </div>
 	<!-- 404 Page -->
 	<div id="notFound" class="route-view hidden flex flex-col items-center justify-center h-screen text-center text-red-500">
 		<h1 class="text-4xl font-bold mb-2">404</h1>
@@ -118,5 +185,6 @@
 	<script type="module" src="router.js"></script>
 	<script type="module" src="/tournament/script.js"></script>
 	<script type="module" src="/login/script.js"></script>
+	<script type="module" src="/chat/tests/chatWSocket.js"></script>
 </body>
 </html>

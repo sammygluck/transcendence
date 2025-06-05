@@ -16,6 +16,13 @@ const routes: Routes = {
 	"/404": "notFound",
 };
 
+// display chat window on these pages
+const showChat: string[] = [
+	"home",
+	"tournamentPage",
+	"game"
+]
+
 function checkLoggedIn(): userInfo | null {
 	// This function checks if the user is logged in
 	const userInfo = localStorage.getItem("userInfo");
@@ -44,10 +51,18 @@ function showView(viewId: string | undefined): void {
 	}
 
 	const view = document.getElementById(viewId) as HTMLElement | null;
+	const chatWindow = document.getElementById("chat-block") as HTMLElement | null;
 	if (view) {
 		view.classList.remove("hidden");
 	} else {
 		document.body.innerHTML = "<h1>404 - Not Found</h1>";
+	}
+	if (chatWindow){
+		if (showChat.includes(viewId)){
+			chatWindow.classList.remove("hidden");
+		}else{
+			chatWindow.classList.add("hidden");
+		}
 	}
 }
 

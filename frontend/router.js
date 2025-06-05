@@ -6,6 +6,11 @@ const routes = {
     "/": "loading",
     "/404": "notFound",
 };
+const showChat = [
+    "home",
+    "tournamentPage",
+    "game"
+];
 function checkLoggedIn() {
     const userInfo = localStorage.getItem("userInfo");
     if (!userInfo) {
@@ -31,11 +36,20 @@ function showView(viewId) {
         return;
     }
     const view = document.getElementById(viewId);
+    const chatWindow = document.getElementById("chat-block");
     if (view) {
         view.classList.remove("hidden");
     }
     else {
         document.body.innerHTML = "<h1>404 - Not Found</h1>";
+    }
+    if (chatWindow) {
+        if (showChat.includes(viewId)) {
+            chatWindow.classList.remove("hidden");
+        }
+        else {
+            chatWindow.classList.add("hidden");
+        }
     }
 }
 function handleRouteChange() {

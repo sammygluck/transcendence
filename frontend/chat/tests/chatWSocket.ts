@@ -20,13 +20,9 @@ const viewProfile = document.getElementById("view-profile") as HTMLElement;
 const inviteUser = document.getElementById("invite-user") as HTMLElement;
 
 const userInfoStr = localStorage.getItem("userInfo");
-if (!userInfoStr) {
-	window.location.href = "/login";
-}
+
 const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
-if (!userInfo) {
-	window.location.href = "/login";
-}
+
 let currentUserData: User;
 let selectedFriend: number = 0; // 0 means no friend selected, -1 is system
 initializeChat();
