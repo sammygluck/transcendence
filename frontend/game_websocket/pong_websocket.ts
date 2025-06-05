@@ -1,4 +1,5 @@
 // all numbers are in % of screen height, if the aspect ratio is fixed to 2, this means that the x axis goes to 200%
+const MAX_BOUNCE_ANGLE = 75 * Math.PI / 180;
 
 enum userInput {
 	unknown = 0,
@@ -54,6 +55,24 @@ class Ball {
         this.radius = radius;
         this.speedX = speed;
         this.speedY = speed;
+    }
+
+    checkCollision(paddle: Paddle): void
+    {
+        if (this.y + this.radius >= paddle.y && this.y - this.radius <= paddle.y + paddle.height)
+        {
+            if ((this.speedX < 0 && paddle.x < 50 && this.x - this.radius <= paddle.x + paddle.width) ||
+                (this.speedX > 0 && paddle.x > 50 && this.x + this.radius >= paddle.x))
+            {
+                const relativeIntersectY = this.y - (paddle.y + paddle.height / 2);
+                const normalized = relativeIntersectY / (paddle.height / 2);
+                const angle = normalized * MAX_BOUNCE_ANGLE;
+                const speed = Math.hypot(this.speedX, this.speedY);
+                const direction = paddle.x < 50 ? 1 : -1;
+                this.speedX = speed * Math.cos(angle) * direction;
+                this.speedY = speed * Math.sin(angle);
+            }
+        }
     }
 
 
