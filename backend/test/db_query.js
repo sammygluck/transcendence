@@ -26,9 +26,11 @@ async function executeQuery() {
       ON gh.loserId  = ul.id
     LEFT JOIN tournament AS t
       ON gh.tournamentId = t.tournamentId
+	WHERE
+    gh.winnerId = ? OR gh.loserId = ?
 	ORDER BY
     gh.timestamp DESC
-	LIMIT 2000;`);
+	LIMIT 2000;`, [3, 3]);
 
 	console.log(result);
 
