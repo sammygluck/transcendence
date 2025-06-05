@@ -45,6 +45,7 @@ class Ball {
     radius: number;
     speedX: number;
     speedY: number;
+    prevX: number;
 
     constructor(x: number, y: number, radius: number, speed: number)
     {
@@ -53,10 +54,12 @@ class Ball {
         this.radius = radius;
         this.speedX = speed;
         this.speedY = speed;
+        this.prevX = x;
     }
 
     move(duration: number): void
     {
+        this.prevX = this.x;
         this.x += this.speedX * duration / 1000;
         this.y += this.speedY * duration / 1000;
 

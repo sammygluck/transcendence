@@ -1,7 +1,25 @@
-  canvas {
-    display: block;
-    margin: 0 auto;
-  }
+canvas {
+  display: block;
+  margin: 0 auto;
+}
+
+/* Styled canvas for pong game */
+.pong-canvas {
+  background: linear-gradient(#222, #444);
+  border: 2px solid #fff;
+}
+
+/* Scoreboard overlay */
+#scoreboard {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  font-size: 32px;
+  font-family: Arial, sans-serif;
+  z-index: 500;
+}
 
   #welcome-message {
     text-align: center;
