@@ -73,7 +73,7 @@ ws.onmessage = (event) => {
             console.log("UserId ", parsedData.sendId);
             friend.chat_history?.push(`${parsedData.sendId}` + "::" + parsedData.message);
             if (selectedFriend === friend.id) {
-                loadChatHistory(friend.id);
+                loadSystemChat();
             } else {
                 friend.new_message = true;
                 loadFriendList();
@@ -169,9 +169,7 @@ backButton.onclick = function () {
 
 function updateChatHeader(userId: number = 0) {
     if (!userId) {
-        userId = currentUserData.id;
-        userHeader.textContent = currentUserData.username;
-        userHeader.onclick = () => openProfile(userId);
+        userHeader.textContent = "Friends";
     }  else {
         userHeader.textContent = currentUserData.friendlist.find(friend => friend.id === userId)?.username || "Unknown";
         userHeader.onclick = () => openProfile(userId);
