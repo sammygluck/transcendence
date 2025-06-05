@@ -14,7 +14,6 @@ async function routes(fastify, options) {
 			//onRequest: [fastify.authenticate],
 		},
 		async (request, reply) => {
-			console.log(chatClients);
 			try {
 				const result = await fastify.sqlite.get(
 					"SELECT users.id, users.username, users.email, users.created_at, users.updated_at, users.blocked_users, users.friends, users.avatar FROM users WHERE id = ?",
@@ -397,6 +396,7 @@ async function routes(fastify, options) {
 			onRequest: [fastify.authenticate],
 		},
 		async (request, reply) => {
+			console.log(request.body);
 			if (!request.body.friendId) {
 				reply.statusCode = 400;
 				return { error: "Missing required fields" };

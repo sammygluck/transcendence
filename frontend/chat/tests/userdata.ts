@@ -73,10 +73,12 @@ export async function fetchUserData(userID: number): Promise<User | null> {
 
 export async function addFriend(userID: number): Promise<void> {
 	try {
+		console.log(userID);
 		const response = await fetch(`/friend`, {
 			method: "POST",
 			headers: {
-				Autherization: `Bearer ${localStorage.getItem("token")}`,
+				Authorization: `Bearer ${localStorage.getItem("token")}`,
+				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ friendId: userID }),
 		});

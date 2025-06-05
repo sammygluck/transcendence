@@ -253,7 +253,7 @@ async function sendFriendRequest(username: string) {
         }
         const friendData = await response.json();
         console.log("Friend Data: ", friendData);
-        addFriend(friendData.id);
+        addFriend(friendData[0].id);
     } catch (error) {
         alert("Failed to send friend request. Please try again later.");
     }
