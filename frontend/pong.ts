@@ -1,4 +1,5 @@
 // all numbers are in % of screen height, if the aspect ratio is fixed to 2, this means that the x axis goes to 200%
+const MAX_BOUNCE_ANGLE = 75 * Math.PI / 180;
 
 class Paddle {
     x: number;
@@ -70,28 +71,18 @@ class Ball {
 
     checkCollision(paddle: Paddle): void
     {
-        // verify vertical overlap with the paddle
-        if (this.y < paddle.y || this.y > paddle.y + paddle.height)
-            return;
-
-        // moving towards the left paddle
-        if (this.speedX < 0 && paddle.x < 50)
+        if (this.y + this.radius >= paddle.y && this.y - this.radius <= paddle.y + paddle.height)
         {
-            const edge = paddle.x + paddle.width;
-            if (this.prevX - this.radius > edge && this.x - this.radius <= edge)
+            if ((this.speedX < 0 && paddle.x < 50 && this.x - this.radius <= paddle.x + paddle.width) ||
+                (this.speedX > 0 && paddle.x > 50 && this.x + this.radius >= paddle.x))
             {
-                this.x = edge + this.radius;
-                this.speedX *= -1;
-            }
-        }
-        // moving towards the right paddle
-        else if (this.speedX > 0 && paddle.x > 50)
-        {
-            const edge = paddle.x;
-            if (this.prevX + this.radius < edge && this.x + this.radius >= edge)
-            {
-                this.x = edge - this.radius;
-                this.speedX *= -1;
+                const relativeIntersectY = this.y - (paddle.y + paddle.height / 2);
+                const normalized = relativeIntersectY / (paddle.height / 2);
+                const angle = normalized * MAX_BOUNCE_ANGLE;
+                const speed = Math.hypot(this.speedX, this.speedY);
+                const direction = paddle.x < 50 ? 1 : -1;
+                this.speedX = speed * Math.cos(angle) * direction;
+                this.speedY = speed * Math.sin(angle);
             }
         }
     }
