@@ -73,7 +73,6 @@ export async function fetchUserData(userID: number): Promise<User | null> {
 
 export async function addFriend(userID: number): Promise<void> {
 	try {
-		console.log(userID);
 		const response = await fetch(`/friend`, {
 			method: "POST",
 			headers: {

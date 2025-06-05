@@ -252,7 +252,6 @@ async function sendFriendRequest(username: string) {
             throw new Error(`Error searching for user: ${response.statusText}`);
         }
         const friendData = await response.json();
-        console.log("Friend Data: ", friendData);
         addFriend(friendData[0].id);
     } catch (error) {
         alert("Failed to send friend request. Please try again later.");
@@ -325,7 +324,7 @@ function updateCurrentUserData(): void {
             updatedData.friendlist.unshift({id: -1, username: "System", online: false, new_message: false, chat_history: []} as Friend);
             updatedData.friendlist.forEach((friend: Friend) => {
                 const existingFriend = currentUserData.friendlist.find(userId => userId.id === friend.id);
-                if (existingFriend.chat_history)
+                if (existingFriend && existingFriend.chat_history)
                     friend.chat_history = existingFriend.chat_history;
             });
             currentUserData = updatedData;

@@ -396,7 +396,6 @@ async function routes(fastify, options) {
 			onRequest: [fastify.authenticate],
 		},
 		async (request, reply) => {
-			console.log(request.body);
 			if (!request.body.friendId) {
 				reply.statusCode = 400;
 				return { error: "Missing required fields" };
