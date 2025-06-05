@@ -59,7 +59,10 @@ class Ball {
 
     checkCollision(paddle: Paddle): void
     {
-        if (this.y + this.radius >= paddle.y && this.y - this.radius <= paddle.y + paddle.height)
+        const verticalOverlap = this.y + this.radius >= paddle.y && this.y - this.radius <= paddle.y + paddle.height;
+        const horizontalOverlap = this.x + this.radius >= paddle.x && this.x - this.radius <= paddle.x + paddle.width;
+
+        if (verticalOverlap)
         {
             if ((this.speedX < 0 && paddle.x < 50 && this.x - this.radius <= paddle.x + paddle.width) ||
                 (this.speedX > 0 && paddle.x > 50 && this.x + this.radius >= paddle.x))
@@ -71,6 +74,19 @@ class Ball {
                 const direction = paddle.x < 50 ? 1 : -1;
                 this.speedX = speed * Math.cos(angle) * direction;
                 this.speedY = speed * Math.sin(angle);
+                return;
+            }
+        }
+
+        if (horizontalOverlap)
+        {
+            if (this.speedY > 0 && this.y - this.radius <= paddle.y)
+            {
+                this.speedY *= -1;
+            }
+            else if (this.speedY < 0 && this.y + this.radius >= paddle.y + paddle.height)
+            {
+                this.speedY *= -1;
             }
         }
     }
