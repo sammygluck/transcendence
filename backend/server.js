@@ -134,6 +134,7 @@ function broadcastToLiveChat(content, socket) {
 	}
 	return null;
 }
+module.exports.broadcastToLiveChat = broadcastToLiveChat;
 
 async function findUserById(userId) {
 	for (const client of chatClients) {
@@ -178,3 +179,4 @@ fastify.listen({ port: 3000 /*host: "0.0.0.0"*/ }, (err) => {
 		process.exit(1);
 	}
 });
+

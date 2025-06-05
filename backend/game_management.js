@@ -1,6 +1,7 @@
 const { type } = require("os");
 const WebSocket = require("ws");
 const jwt = require("jsonwebtoken");
+const broadcastToLiveChat = require("./server.js").broadcastToLiveChat;
 
 const secret = "superSecretStringForJWT"; // move to .env file
 
@@ -221,6 +222,7 @@ async function game_management(fastify) {
 			);
 			// announce tournament winner
 			broadcast({ type: "tournamentWinner", data: currentTournament.winner });
+			broadcastToLiveChat("Tournament winner: " + currentTournament.winner.username, null);
 			console.log("Tournament finished");
 			currentTournament = null;
 		} else if (currentTournament.players.length === 0) {
@@ -344,6 +346,7 @@ async function game_management(fastify) {
 		}
 		if (currentMatch) {
 			broadcast({ type: "nextMatch", data: currentMatch });
+			broadcastToLiveChat("Next match: " + currentMatch.player1.username + " vs " + currentMatch.player2.username, null);
 		}
 	}
 
