@@ -5,13 +5,15 @@ class Paddle {
     height;
     speed;
     dy;
-    constructor(x, y, width, height, speed) {
+    color;
+    constructor(x, y, width, height, speed, color = "white") {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.speed = speed;
         this.dy = 0;
+        this.color = color;
     }
     move(duration) {
         this.y += this.dy * duration / 1000;
@@ -24,7 +26,7 @@ class Paddle {
     }
     draw(ctx, canvasHeight) {
         let scaleFactor = canvasHeight / 100;
-        ctx.fillStyle = "white";
+        ctx.fillStyle = this.color;
         ctx.fillRect(this.x * scaleFactor, this.y * scaleFactor, this.width * scaleFactor, this.height * scaleFactor);
     }
 }
@@ -34,14 +36,15 @@ class Ball {
     radius;
     speedX;
     speedY;
-    prevX;
-    constructor(x, y, radius, speed) {
+    color;
+    constructor(x, y, radius, speed, color = "white") {
+
         this.x = x;
         this.y = y;
         this.radius = radius;
         this.speedX = speed;
         this.speedY = speed;
-        this.prevX = x;
+        this.color = color;
     }
     move(duration) {
         this.prevX = this.x;
@@ -71,7 +74,7 @@ class Ball {
     }
     draw(ctx, canvasHeight) {
         let scaleFactor = canvasHeight / 100;
-        ctx.fillStyle = "white";
+        ctx.fillStyle = this.color;
         ctx.beginPath();
         ctx.arc(this.x * scaleFactor, this.y * scaleFactor, this.radius * scaleFactor, 0, Math.PI * 2);
         ctx.fill();
@@ -83,18 +86,20 @@ class Game {
     paddleLeft;
     paddleRight;
     ball;
+    scoreboard;
     scoreLeft;
     scoreRight;
     prevTime;
-    constructor(canvas) {
+    constructor(canvas, scoreboard) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
-        this.paddleLeft = new Paddle(1, 45, 2, 10, 30);
-        this.paddleRight = new Paddle(197, 45, 2, 10, 30);
-        this.ball = new Ball(100, 50, 1, 30);
+        this.paddleLeft = new Paddle(1, 45, 2, 10, 30, "#00bfff");
+        this.paddleRight = new Paddle(197, 45, 2, 10, 30, "#00bfff");
+        this.ball = new Ball(100, 50, 1, 30, "#ffdd33");
         this.scoreLeft = 0;
         this.scoreRight = 0;
         this.prevTime = 0;
+        this.scoreboard = scoreboard;
         this.handleInput();
         this.loop(0);
     }
@@ -150,15 +155,19 @@ class Game {
     render() {
         this.ctx.fillStyle = "black";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        let scale = this.canvas.height / 100;
+        this.ctx.fillStyle = "white";
+        this.ctx.fillRect(100 * scale - 1, 0, 2, this.canvas.height);
         this.paddleLeft.draw(this.ctx, this.canvas.height);
         this.paddleRight.draw(this.ctx, this.canvas.height);
         this.ball.draw(this.ctx, this.canvas.height);
-        this.ctx.fillStyle = "white";
-        this.ctx.font = "20px Arial";
-        this.ctx.fillText(`${this.scoreLeft} - ${this.scoreRight}`, this.canvas.width / 2 - 20, 30);
+        if (this.scoreboard) {
+            this.scoreboard.textContent = `${this.scoreLeft} - ${this.scoreRight}`;
+        }
     }
 }
 const canvas = document.getElementById("pongCanvas");
 canvas.width = 800;
 canvas.height = 400;
-new Game(canvas);
+const scoreboard = document.getElementById("scoreboard");
+new Game(canvas, scoreboard);
