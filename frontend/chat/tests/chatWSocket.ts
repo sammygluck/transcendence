@@ -15,6 +15,10 @@ const friends = document.getElementById("friends") as HTMLElement;
 const searchBar = document.getElementById("search-bar") as HTMLInputElement;
 const friendList = document.getElementById("friend-list") as HTMLElement;
 
+const contextMenu = document.getElementById("context-menu") as HTMLElement;
+const viewProfile = document.getElementById("view-profile") as HTMLElement;
+const inviteUser = document.getElementById("invite-user") as HTMLElement;
+
 const userInfoStr = localStorage.getItem("userInfo");
 if (!userInfoStr) {
 	window.location.href = "/login";
@@ -125,6 +129,10 @@ async function initializeChat(): Promise<void> {
     displayFriendsList();
 }
 
+document.onclick = () => {
+    contextMenu.style.display = "none";
+}
+
 LsendButton.onclick = () => {
     const message = LmessageIn.value;
     if (message)
@@ -157,7 +165,7 @@ messageIn.onkeydown = (event) => {
     }
 }
 
-backButton.onclick = function () {
+backButton.onclick = () => {
     friendChat.style.display = "none";
     backButton.style.display = "none";
     friends.style.display = "block";
@@ -219,6 +227,7 @@ function loadFriendList(friendsArray: Friend[] | null = null) {
             friendItem.style.fontWeight = friend.new_message? "bold": "normal";
             friendItem.appendChild(statusIcon);
     	    friendItem.onclick = () => openChat(friend.id);
+            friendItem.oncontextmenu = (event) => rclickMenu(event, friend.id);
     	    friendList.appendChild(friendItem);
         }
 	});
@@ -253,6 +262,33 @@ async function sendFriendRequest(username: string) {
         addFriend(friendData[0].id);
     } catch (error) {
         alert("Failed to send friend request. Please try again later.");
+    }
+}
+
+function rclickMenu(e, userId: number)
+{
+    e.preventDefault();
+    contextMenu.style.display = "block";
+    contextMenu.style.left = e.offsetX  + "px";
+    contextMenu.style.top = (e.offsetY + 128) + "px";
+    viewProfile.onclick = () => {
+        openProfile(userId);
+    }
+    inviteUser.onclick = async () => {
+        try {
+            const response = await fetch(`/invitetournament`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${userInfo.token}`,
+                    "Content-Type": "application/JSON",
+                },
+                body: JSON.stringify({id: userId}),
+            });
+            if (!response.ok)
+                throw new Error(`Error invinting user: ${response.statusText}`);
+        } catch (error){
+            alert("Failed to send game invite. Please try again later.")
+        }
     }
 }
 

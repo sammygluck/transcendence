@@ -95,6 +95,7 @@ export async function removeFriend(userID: number): Promise<void> {
 			method: "DELETE",
 			headers: {
 				Authorization: `Bearer ${localStorage.getItem("token")}`,
+				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ friendId: userID }),
 		});
@@ -112,6 +113,7 @@ export async function blockUser(userID: number): Promise<void> {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${localStorage.getItem("token")}`,
+				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ userId: userID }),
 		});
@@ -129,6 +131,7 @@ export async function unblockUser(userID: number): Promise<void> {
 			method: "DELETE",
 			headers: {
 				Authorization: `Bearer ${localStorage.getItem("token")}`,
+				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({ userId: userID }),
 		});
