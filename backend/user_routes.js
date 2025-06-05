@@ -11,7 +11,7 @@ async function routes(fastify, options) {
 	fastify.get(
 		"/user/:id",
 		{
-			//onRequest: [fastify.authenticate],
+			onRequest: [fastify.authenticate],
 		},
 		async (request, reply) => {
 			try {
