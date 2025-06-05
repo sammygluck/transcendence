@@ -1,199 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat Block</title>
-  <style>
-    /* Basic styling for the chat block */
-    #chat-block {
-      position: absolute;
-      bottom: 5%;
-      left: 50%;
-      transform: translate(-50%);
-      width: 66.67%; /* 2/3 of the window width */
-      height: 400px; /* Fixed height */
-      border: 1px solid #ccc;
-      background-color: #f9f9f9;
-      display: flex;
-      flex-direction: row; /* Place live-chat and friend-chat side by side */
-    }
-    #chat-header {
-      background-color: #27548a;
-      color: #dda853;
-      padding: 10px;
-      text-align: center;
-      font-weight: bold;
-    }
-    #username {
-      cursor: pointer;
-    }
-    .friend {
-      width: 100%; /* Full width of the parent */
-      color: #183b4e;
-	    cursor: pointer; /* Change cursor to pointer on hover */
-      position: relative; /* Ensure the button can be positioned relative to the friend container */
-      padding: 5px;
-      border-bottom: 1px solid #27548a;
-    }
-    .friend:hover {
-      background-color: #f1f1f1;
-    }
-    .friend button {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-    .online {
-      width: 10px;
-      height: 10px;
-      border: 2px solid #183b4e;
-      border-radius: 50%;
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background-color: #00e100;
-    }
-    .offline {
-      width: 10px;
-      height: 10px;
-      border: 2px solid #183b4e;
-      border-radius: 50%;
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background-color: #F5EEDC;
-    }
-    .message-io {
-      display: flex;
-      flex-direction: row;
-      gap: 10px; /* Add spacing between input and button */
-      padding: 10px; /* Add padding around the message container */
-      border-top: 1px solid #ddd; /* Add a top border to separate from messages */
-      box-sizing: border-box; /* Include padding and border in the width */
-    }
-    #message-in {
-      flex: 1; /* Allow the input to take up available space */
-    }
-    #send-button {
-      flex-shrink: 0; /* Prevent the button from shrinking */
-    }
-    #live-chat {
-      flex: 2; /* Take up 2/3 of the width */
-      display: flex;
-      flex-direction: column; /* Maintain column layout inside */
-      border: 1px solid #ddd; /* Add a small border */
-      padding: 10px; /* Add inner padding */
-      box-sizing: border-box; /* Ensure padding doesn't affect width/height */
-      position: relative; /* Make this the positioning context for #message-io */
-    }
-    #friends-and-chat {
-      flex: 1; /* Take up 1/3 of the width */
-      display: flex;
-      flex-direction: column; /* Maintain column layout inside */
-      border: 1px solid #ddd; /* Add a small border */
-      padding: 10px; /* Add inner padding */
-      box-sizing: border-box; /* Ensure padding doesn't affect width/height */
-      position: relative;
-    }
-    #friend-chat{
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      min-height: 0;
-      box-sizing: border-box;
-      position: relative;
-    }
-    .chat-window {
-      position: relative;
-      flex: 1;
-      display: flex;
-      flex-direction: column-reverse;
-      overflow-y: auto;
-      min-height: 0;
-      box-sizing: border-box;
-    }
-    #search-bar {
-      width: 100%;
-      margin: 10px 0;
-      box-sizing: border-box; /* Ensure padding and borders are included in the width */
-    }
-
-    #context-menu {
-      position: absolute;
-      text-align: center;
-      background: lightgray;
-      border: 1px solid black;
-    }
-    #context-menu ul {
-      padding: 0px;
-      margin: 0px;
-      min-width: 150px;
-      list-style: none;
-    }
-    #context-menu ul li {
-      padding-bottom: 7px;
-      padding-top: 7px;
-      border: 1px solid black;
-    }
-    #context-menu ul li:hover {
-      background: darkgray;
-    }
-  </style>
-</head>
-<body>
-  <div id="chat-block">
-    <div id="live-chat">
-      <h3 style="margin: 0;">Live Chat</h3>
-      <!-- Live chat messages will be dynamically populated -->
-      <div id="live-chat-content" class="chat-window"></div>
-      <div class="message-io">
-        <input
-          id="live-message-in"
-          type="text"
-          placeholder="Type a message..."
-        />
-        <button id="live-send-button">Send</button>
-      </div>
-    </div>
-    <div id="friends-and-chat">
-      <div id="chat-header">
-        <button id="back-button"><</button>
-        <a id="user-header">Your Username</a>
-      </div>
-      <div id="friends">
-        <input
-        id="search-bar"
-        Type="text"
-        placeholder="Search friends..."
-        />
-      <!-- Friends list or chat content will be dynamically populated -->
-      <div id="friend-list"></div>
-      </div>
-      <div id="friend-chat">
-        <div id="chat-content" class="chat-window"></div>
-        <div class="message-io">
-         <input
-           id="message-in"
-           type="text"
-           placeholder="Type a message..."
-         />
-         <button id="send-button">Send</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Block</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-amber-50 text-blue-950">
+    <div
+      id="chat-block" class="absolute bottom-[5%] left-1/2 transform -translate-x-1/2 w-2/3 h-[400px] border border-blue-950 bg-amber-50 flex flex-row">
+      <!-- Live Chat -->
+      <div
+        id="live-chat" class="flex flex-col flex-[2] border border-blue-950 p-2 box-border relative">
+        <h2 class="pb-2 font-bold text-blue-950 border-b border-blue-950">Live Chat</h2>
+        <div
+          id="live-chat-content" class="flex-1 flex flex-col-reverse overflow-y-scroll min-h-0 break-all relative"></div>
+        <div
+          class="message-io flex flex-row gap-2 p-2 border-t border-blue-950 box-border">
+          <input
+            id="live-message-in"
+            type="text"
+            placeholder="Type a message..."
+            class="flex-1 p-2 border border-blue-950 rounded bg-amber-50 text-blue-950"
+          />
+          <button
+            id="live-send-button" class="px-4 py-2 bg-blue-900 text-amber-400 font-bold rounded hover:brightness-90">
+            Send
+          </button>
         </div>
       </div>
-      <div id="context-menu" style="display: none;">
-        <ul>
-          <li id="view-profile">View Profile</li>
-          <li id="invite-user">Invite User</li>
-        </ul>
+
+      <!-- Friends and Chat -->
+      <div
+        id="friends-and-chat" class="flex flex-col flex-[1] border border-blue-950 p-2 box-border relative">
+        <div id="chat-header" class="flex flex-row bg-blue-900 text-amber-400 p-2 items-center font-bold">
+          <button id="back-button" class="left-2 hover:cursor-pointer">&lt;</button>
+          <a id="user-header" class="mx-auto hover:cursor-pointer">Your Username</a>
+        </div>
+        <div id="friends" class="flex flex-col">
+          <input
+            id="search-bar"
+            type="text"
+            placeholder="Search friends..."
+            class="w-full my-2 p-2 border border-blue-950 rounded bg-amber-50 text-blue-950"
+          />
+          <div id="friend-list"></div>
+        </div>
+        <div id="friend-chat" class="flex flex-col flex-1 overflow-y-auto min-h-0 box-border relative">
+          <div id="chat-content" class="chat-window flex-1 flex flex-col-reverse overflow-y-scroll min-h-0 break-all box-border relative"></div>
+          <div class="message-io flex flex-row gap-2 p-2 border-t border-blue-950 box-border">
+            <input
+              id="message-in"
+              type="text"
+              placeholder="Type a message..."
+              class="flex-1 p-2 border border-blue-950 rounded bg-amber-50 text-blue-950"
+            />
+            <button
+              id="send-button" class="px-4 py-2 bg-blue-900 text-amber-400 font-bold rounded hover:brightness-90">
+              Send
+            </button>
+          </div>
+        </div>
+        <div id="context-menu" class="absolute text-center bg-amber-50 border border-blue-950 rounded-md hidden">
+          <ul class="p-0 m-0 min-w-[150px] list-none">
+            <li id="view-profile" class="py-2 border border-blue-950 rounded-t-md hover:bg-amber-100 hover:text-blue-950">
+              View Profile
+            </li>
+            <li id="invite-user" class="py-2 border border-blue-950 rounded-b-md hover:bg-amber-100 hover:text-blue-950">
+              Invite User
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
-  </div>
-
-  <script type="module" src="chatWSocket.js"></script>
-</body>
+    <script type="module" src="chatWSocket.js"></script>
+  </body>
 </html>

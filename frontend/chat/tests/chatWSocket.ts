@@ -213,7 +213,7 @@ function loadFriendList(friendsArray: Friend[] | null = null) {
 	friendsArray.forEach((friend) => {
         if (friend.id === -1) {
             const sysItem = document.createElement("div");
-            sysItem.className = "friend";
+            sysItem.className = "w-full text-blue-950 cursor-pointer relative p-2 border-b border-blue-900 hover:bg-amber-100";
             sysItem.textContent = "System";
             sysItem.style.fontWeight = friend.new_message ? "bold" : "normal";
             sysItem.onclick = () => openChat(friend.id);
@@ -222,7 +222,7 @@ function loadFriendList(friendsArray: Friend[] | null = null) {
 		    const friendItem = document.createElement("div");
             const statusIcon = document.createElement("span");
             statusIcon.classList.add(friend.online ? "online" : "offline");
-		    friendItem.className = "friend";
+		    friendItem.className = "w-full text-blue-950 cursor-pointer relative p-2 border-b border-blue-900 hover:bg-amber-100";
 		    friendItem.textContent = friend.username;
             friendItem.style.fontWeight = friend.new_message? "bold": "normal";
             friendItem.appendChild(statusIcon);
@@ -236,11 +236,12 @@ function loadFriendList(friendsArray: Friend[] | null = null) {
 function displayDummy(username: string) {
     friendList.innerHTML = "";
     const dummy = document.createElement("div");
-    dummy.className = "friend";
+    dummy.className = "w-full text-blue-950 cursor-pointer relative p-2 border-b border-blue-900 hover:bg-amber-100";
     dummy.textContent = username;
 
     const sendReq = document.createElement("button");
     sendReq.textContent = "Send Friend Request";
+    sendReq.className= "absolute right-2 top-1/2 transform -translate-y-1/2";
     sendReq.onclick = () => sendFriendRequest(username);
 
     dummy.appendChild(sendReq);
@@ -270,7 +271,7 @@ function rclickMenu(e, userId: number)
     e.preventDefault();
     contextMenu.style.display = "block";
     contextMenu.style.left = e.offsetX  + "px";
-    contextMenu.style.top = (e.offsetY + 128) + "px";
+    contextMenu.style.top = (e.offsetY + 150) + "px";
     viewProfile.onclick = () => {
         openProfile(userId);
     }
@@ -312,7 +313,7 @@ function openChat(friendId: number) {
 
 function loadChatHistory(friendId: number) {
     chatContent.innerHTML = ""; // Clear previous chat content
-    chatContent.className = "chat-window";
+    chatContent.className = "flex-1 flex flex-col-reverse overflow-y-auto min-h-0 box-border relative";
     const friendData = currentUserData.friendlist.find(friend => friend.id === friendId);
     friendData.new_message = false;
     if (friendData.chat_history) {
@@ -328,7 +329,7 @@ function loadChatHistory(friendId: number) {
 
 function loadSystemChat() {
     chatContent.innerHTML = ""; // Clear previous chat content
-    chatContent.className = "chat-window";
+    chatContent.className = "flex-1 flex flex-col-reverse overflow-y-auto min-h-0 box-border relative";
     const systemData = currentUserData.friendlist.find(friend => friend.id === -1);
     systemData.new_message = false;
     if (systemData.chat_history) {
