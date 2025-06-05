@@ -44,6 +44,7 @@ class Ball {
     radius: number;
     speedX: number;
     speedY: number;
+    prevX: number;
 
     constructor(x: number, y: number, radius: number, speed: number)
     {
@@ -52,10 +53,12 @@ class Ball {
         this.radius = radius;
         this.speedX = speed;
         this.speedY = speed;
+        this.prevX = x;
     }
 
     move(duration: number): void
     {
+        this.prevX = this.x;
         this.x += this.speedX * duration / 1000;
         this.y += this.speedY * duration / 1000;
 
@@ -67,31 +70,30 @@ class Ball {
 
     checkCollision(paddle: Paddle): void
     {
-		// we may have to add collision detection with the top and bottom of the paddle
+        // verify vertical overlap with the paddle
+        if (this.y < paddle.y || this.y > paddle.y + paddle.height)
+            return;
 
-		// y direction
-		if (this.y >= paddle.y && this.y <= paddle.y + paddle.height)
-		{
-			// x direction left paddle
-			if (this.speedX < 0 && paddle.x < 50 && this.x - this.radius <= paddle.x + paddle.width)
-			{
-				this.speedX *= -1;
-			}
-			// x direction right paddle
-			else if (this.speedX > 0 && paddle.x > 50 && this.x + this.radius >= paddle.x)
-			{
-				this.speedX *= -1;
-			}
-		}
-
-		// with the code below, the ball was sticking to the paddle sometimes
-		/*
-        if ( this.x - this.radius <= paddle.x + paddle.width && this.x + this.radius >= paddle.x &&
-            this.y >= paddle.y && this.y <= paddle.y + paddle.height )
+        // moving towards the left paddle
+        if (this.speedX < 0 && paddle.x < 50)
         {
-            this.speedX *= -1;
+            const edge = paddle.x + paddle.width;
+            if (this.prevX - this.radius > edge && this.x - this.radius <= edge)
+            {
+                this.x = edge + this.radius;
+                this.speedX *= -1;
+            }
         }
-			*/
+        // moving towards the right paddle
+        else if (this.speedX > 0 && paddle.x > 50)
+        {
+            const edge = paddle.x;
+            if (this.prevX + this.radius < edge && this.x + this.radius >= edge)
+            {
+                this.x = edge - this.radius;
+                this.speedX *= -1;
+            }
+        }
     }
 
     draw(ctx: CanvasRenderingContext2D, canvasHeight: number): void
