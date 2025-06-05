@@ -1,4 +1,5 @@
 // all numbers are in % of screen height, if the aspect ratio is fixed to 2, this means that the x axis goes to 200%
+const MAX_BOUNCE_ANGLE = 75 * Math.PI / 180;
 var userInput;
 (function (userInput) {
     userInput[userInput["unknown"] = 0] = "unknown";
@@ -46,6 +47,31 @@ class Ball {
         this.radius = radius;
         this.speedX = speed;
         this.speedY = speed;
+    }
+    checkCollision(paddle) {
+        const verticalOverlap = this.y + this.radius >= paddle.y && this.y - this.radius <= paddle.y + paddle.height;
+        const horizontalOverlap = this.x + this.radius >= paddle.x && this.x - this.radius <= paddle.x + paddle.width;
+        if (verticalOverlap) {
+            if ((this.speedX < 0 && paddle.x < 50 && this.x - this.radius <= paddle.x + paddle.width) ||
+                (this.speedX > 0 && paddle.x > 50 && this.x + this.radius >= paddle.x)) {
+                const relativeIntersectY = this.y - (paddle.y + paddle.height / 2);
+                const normalized = relativeIntersectY / (paddle.height / 2);
+                const angle = normalized * MAX_BOUNCE_ANGLE;
+                const speed = Math.hypot(this.speedX, this.speedY);
+                const direction = paddle.x < 50 ? 1 : -1;
+                this.speedX = speed * Math.cos(angle) * direction;
+                this.speedY = speed * Math.sin(angle);
+                return;
+            }
+        }
+        if (horizontalOverlap) {
+            if (this.speedY > 0 && this.y - this.radius <= paddle.y) {
+                this.speedY *= -1;
+            }
+            else if (this.speedY < 0 && this.y + this.radius >= paddle.y + paddle.height) {
+                this.speedY *= -1;
+            }
+        }
     }
     draw(ctx, canvasHeight) {
         let scaleFactor = canvasHeight / 100;

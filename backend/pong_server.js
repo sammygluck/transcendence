@@ -6,6 +6,7 @@ var userInput;
     userInput[userInput["moveDownStart"] = 3] = "moveDownStart";
     userInput[userInput["moveDownEnd"] = 4] = "moveDownEnd";
 })(userInput || (userInput = {}));
+const MAX_BOUNCE_ANGLE = 75 * Math.PI / 180;
 var paddleSide;
 (function (paddleSide) {
     paddleSide[paddleSide["unknown"] = 0] = "unknown";
@@ -76,16 +77,29 @@ class Ball {
         }
     }
     checkCollision(paddle) {
-        // we may have to add collision detection with the top and bottom of the paddle
-        // y direction
-        if (this.y >= paddle.y && this.y <= paddle.y + paddle.height) {
-            // x direction left paddle
-            if (this.speedX < 0 && paddle.x < 50 && this.x - this.radius <= paddle.x + paddle.width) {
-                this.speedX *= -1;
+        const verticalOverlap = this.y + this.radius >= paddle.y && this.y - this.radius <= paddle.y + paddle.height;
+        const horizontalOverlap = this.x + this.radius >= paddle.x && this.x - this.radius <= paddle.x + paddle.width;
+        // collision on paddle sides
+        if (verticalOverlap) {
+            if ((this.speedX < 0 && paddle.x < 50 && this.x - this.radius <= paddle.x + paddle.width) ||
+                (this.speedX > 0 && paddle.x > 50 && this.x + this.radius >= paddle.x)) {
+                const relativeIntersectY = this.y - (paddle.y + paddle.height / 2);
+                const normalized = relativeIntersectY / (paddle.height / 2);
+                const angle = normalized * MAX_BOUNCE_ANGLE;
+                const speed = Math.hypot(this.speedX, this.speedY);
+                const direction = paddle.x < 50 ? 1 : -1;
+                this.speedX = speed * Math.cos(angle) * direction;
+                this.speedY = speed * Math.sin(angle);
+                return;
             }
-            // x direction right paddle
-            else if (this.speedX > 0 && paddle.x > 50 && this.x + this.radius >= paddle.x) {
-                this.speedX *= -1;
+        }
+        // collision on paddle top/bottom
+        if (horizontalOverlap) {
+            if (this.speedY > 0 && this.y - this.radius <= paddle.y) {
+                this.speedY *= -1;
+            }
+            else if (this.speedY < 0 && this.y + this.radius >= paddle.y + paddle.height) {
+                this.speedY *= -1;
             }
         }
     }

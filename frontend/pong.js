@@ -1,3 +1,5 @@
+// all numbers are in % of screen height, if the aspect ratio is fixed to 2, this means that the x axis goes to 200%
+const MAX_BOUNCE_ANGLE = 75 * Math.PI / 180;
 class Paddle {
     x;
     y;
@@ -5,15 +7,13 @@ class Paddle {
     height;
     speed;
     dy;
-    color;
-    constructor(x, y, width, height, speed, color = "white") {
+    constructor(x, y, width, height, speed) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.speed = speed;
         this.dy = 0;
-        this.color = color;
     }
     move(duration) {
         this.y += this.dy * duration / 1000;
@@ -26,7 +26,7 @@ class Paddle {
     }
     draw(ctx, canvasHeight) {
         let scaleFactor = canvasHeight / 100;
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = "white";
         ctx.fillRect(this.x * scaleFactor, this.y * scaleFactor, this.width * scaleFactor, this.height * scaleFactor);
     }
 }
@@ -36,15 +36,14 @@ class Ball {
     radius;
     speedX;
     speedY;
-    color;
-    constructor(x, y, radius, speed, color = "white") {
-
+    prevX;
+    constructor(x, y, radius, speed) {
         this.x = x;
         this.y = y;
         this.radius = radius;
         this.speedX = speed;
         this.speedY = speed;
-        this.color = color;
+        this.prevX = x;
     }
     move(duration) {
         this.prevX = this.x;
@@ -55,26 +54,33 @@ class Ball {
         }
     }
     checkCollision(paddle) {
-        if (this.y < paddle.y || this.y > paddle.y + paddle.height)
-            return;
-        if (this.speedX < 0 && paddle.x < 50) {
-            const edge = paddle.x + paddle.width;
-            if (this.prevX - this.radius > edge && this.x - this.radius <= edge) {
-                this.x = edge + this.radius;
-                this.speedX *= -1;
+        const verticalOverlap = this.y + this.radius >= paddle.y && this.y - this.radius <= paddle.y + paddle.height;
+        const horizontalOverlap = this.x + this.radius >= paddle.x && this.x - this.radius <= paddle.x + paddle.width;
+        if (verticalOverlap) {
+            if ((this.speedX < 0 && paddle.x < 50 && this.x - this.radius <= paddle.x + paddle.width) ||
+                (this.speedX > 0 && paddle.x > 50 && this.x + this.radius >= paddle.x)) {
+                const relativeIntersectY = this.y - (paddle.y + paddle.height / 2);
+                const normalized = relativeIntersectY / (paddle.height / 2);
+                const angle = normalized * MAX_BOUNCE_ANGLE;
+                const speed = Math.hypot(this.speedX, this.speedY);
+                const direction = paddle.x < 50 ? 1 : -1;
+                this.speedX = speed * Math.cos(angle) * direction;
+                this.speedY = speed * Math.sin(angle);
+                return;
             }
         }
-        else if (this.speedX > 0 && paddle.x > 50) {
-            const edge = paddle.x;
-            if (this.prevX + this.radius < edge && this.x + this.radius >= edge) {
-                this.x = edge - this.radius;
-                this.speedX *= -1;
+        if (horizontalOverlap) {
+            if (this.speedY > 0 && this.y - this.radius <= paddle.y) {
+                this.speedY *= -1;
+            }
+            else if (this.speedY < 0 && this.y + this.radius >= paddle.y + paddle.height) {
+                this.speedY *= -1;
             }
         }
     }
     draw(ctx, canvasHeight) {
         let scaleFactor = canvasHeight / 100;
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = "white";
         ctx.beginPath();
         ctx.arc(this.x * scaleFactor, this.y * scaleFactor, this.radius * scaleFactor, 0, Math.PI * 2);
         ctx.fill();
@@ -86,20 +92,18 @@ class Game {
     paddleLeft;
     paddleRight;
     ball;
-    scoreboard;
     scoreLeft;
     scoreRight;
     prevTime;
-    constructor(canvas, scoreboard) {
+    constructor(canvas) {
         this.canvas = canvas;
-        this.ctx = canvas.getContext("2d");
-        this.paddleLeft = new Paddle(1, 45, 2, 10, 30, "#00bfff");
-        this.paddleRight = new Paddle(197, 45, 2, 10, 30, "#00bfff");
-        this.ball = new Ball(100, 50, 1, 30, "#ffdd33");
+        this.ctx = canvas.getContext("2d"); //need explantion
+        this.paddleLeft = new Paddle(1, 45, 2, 10, 30);
+        this.paddleRight = new Paddle(197, 45, 2, 10, 30);
+        this.ball = new Ball(100, 50, 1, 30);
         this.scoreLeft = 0;
         this.scoreRight = 0;
         this.prevTime = 0;
-        this.scoreboard = scoreboard;
         this.handleInput();
         this.loop(0);
     }
@@ -155,19 +159,15 @@ class Game {
     render() {
         this.ctx.fillStyle = "black";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        let scale = this.canvas.height / 100;
-        this.ctx.fillStyle = "white";
-        this.ctx.fillRect(100 * scale - 1, 0, 2, this.canvas.height);
         this.paddleLeft.draw(this.ctx, this.canvas.height);
         this.paddleRight.draw(this.ctx, this.canvas.height);
         this.ball.draw(this.ctx, this.canvas.height);
-        if (this.scoreboard) {
-            this.scoreboard.textContent = `${this.scoreLeft} - ${this.scoreRight}`;
-        }
+        this.ctx.fillStyle = "white";
+        this.ctx.font = "20px Arial";
+        this.ctx.fillText(`${this.scoreLeft} - ${this.scoreRight}`, this.canvas.width / 2 - 20, 30);
     }
 }
 const canvas = document.getElementById("pongCanvas");
 canvas.width = 800;
 canvas.height = 400;
-const scoreboard = document.getElementById("scoreboard");
-new Game(canvas, scoreboard);
+new Game(canvas);
