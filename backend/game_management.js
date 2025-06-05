@@ -11,6 +11,60 @@ async function game_management(fastify) {
 	let currentTournament = null; // current tournament in progress
 	let tournamentCounter = 0; // counter for tournament ids
 
+	fastify.post("/invitetournament",
+		{
+			onRequest: [fastify.authenticate],
+		},
+		async (request, reply) => {
+			if (!request.body.id) {
+				reply.statusCode = 400;
+				return { error: "Missing required fields" };
+			}
+			try {
+				const result = await fastify.sqlite.get(
+					"SELECT users.id, users.username, users.email FROM users WHERE id = ?",
+					[request.body.id]
+				);
+				if (!result) {
+					reply.statusCode = 404;
+					return { error: "User not found" };
+				}
+				if (result.id === request.user.id){
+					reply.statusCode = 500;
+					return {error: "Can't invite yourself"};
+				}
+				tournamentCounter++;
+				const tournament = {
+					id: tournamentCounter, // temporary id, replace with database id when saving to db
+					name: "tournament " + tournamentCounter,
+					creator: {
+						id: request.user.id,
+						username: request.user.username,
+						email: request.user.email,
+					},
+					scoreToWin: 10,
+					players: [{
+						id: result.id,
+						username: result.username,
+						email: result.email,
+					}, 
+					{
+						id: request.user.id,
+						username: request.user.username,
+						email: request.user.email,
+					}],
+					started: false,
+				};
+				console.log(tournament);
+				openTournaments.push(tournament);
+			} catch (error) {
+				console.error("Error inviting user: " + error.message);
+				reply.statusCode = 500;
+				return { error: "Error inviting user" };
+			}
+		}
+	)
+
 	fastify.get("/game", { websocket: true }, (socket, req) => {
 		// authenticate the user
 		const token = req.query.token;
