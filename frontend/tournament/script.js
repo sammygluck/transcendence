@@ -33,14 +33,15 @@ function connectGameServer() {
         switch (e.code) {
             case 4000:
                 console.log("No token provided");
+                logout();
                 break;
             case 4001:
                 console.log("Invalid token");
+                logout();
                 break;
             default:
                 console.log("Disconnected from the server");
         }
-        logout();
     });
     ws.addEventListener("open", () => {
         const msg = { type: "list_tournaments" };

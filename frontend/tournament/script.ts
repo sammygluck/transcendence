@@ -89,14 +89,15 @@ function connectGameServer(): void {
 		switch (e.code) {
 			case 4000:
 				console.log("No token provided");
+				logout();
 				break;
 			case 4001:
 				console.log("Invalid token");
+				logout();
 				break;
 			default:
 				console.log("Disconnected from the server");
 		}
-		logout();
 		/*console.log("Reconnecting in 5 seconds...");
 		setTimeout(() => {
 			connectGameServer();
