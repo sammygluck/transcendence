@@ -76,31 +76,16 @@ class Ball {
         }
     }
     checkCollision(paddle) {
-        // side collisions (left/right of the paddle)
-        if (this.y + this.radius >= paddle.y && this.y - this.radius <= paddle.y + paddle.height) {
-            const speed = Math.sqrt(this.speedX * this.speedX + this.speedY * this.speedY);
-            // collision with left paddle
-            if (this.speedX < 0 && this.x - this.radius <= paddle.x + paddle.width && this.x > paddle.x) {
-                const offset = (this.y - (paddle.y + paddle.height / 2)) / (paddle.height / 2);
-                const angle = offset * Math.PI / 3; // limit bounce angle
-                this.speedX = speed * Math.cos(angle);
-                this.speedY = speed * Math.sin(angle);
+        // we may have to add collision detection with the top and bottom of the paddle
+        // y direction
+        if (this.y >= paddle.y && this.y <= paddle.y + paddle.height) {
+            // x direction left paddle
+            if (this.speedX < 0 && paddle.x < 50 && this.x - this.radius <= paddle.x + paddle.width) {
+                this.speedX *= -1;
             }
-            // collision with right paddle
-            else if (this.speedX > 0 && this.x + this.radius >= paddle.x && this.x < paddle.x + paddle.width) {
-                const offset = (this.y - (paddle.y + paddle.height / 2)) / (paddle.height / 2);
-                const angle = offset * Math.PI / 3;
-                this.speedX = -speed * Math.cos(angle);
-                this.speedY = speed * Math.sin(angle);
-            }
-        }
-        // collisions from top or bottom of the paddle
-        if (this.x + this.radius >= paddle.x && this.x - this.radius <= paddle.x + paddle.width) {
-            if (this.speedY > 0 && this.y - this.radius <= paddle.y && this.y > paddle.y) {
-                this.speedY *= -1;
-            }
-            else if (this.speedY < 0 && this.y + this.radius >= paddle.y + paddle.height && this.y < paddle.y + paddle.height) {
-                this.speedY *= -1;
+            // x direction right paddle
+            else if (this.speedX > 0 && paddle.x > 50 && this.x + this.radius >= paddle.x) {
+                this.speedX *= -1;
             }
         }
     }
