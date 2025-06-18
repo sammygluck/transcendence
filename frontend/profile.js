@@ -16,11 +16,14 @@ export async function openProfile(userId) {
     if (!res.ok) { alert(data.error || "Cannot load profile"); return; }
   
     renderView(overlay, data);
-    wireExtraButtons(overlay, data); 
+    wireExtraButtons(overlay, data);
     wireFriendBlock(overlay, data);
 
     const isMe = +userId === window.__CURRENT_USER_ID;
-    if (isMe) wireEdit(overlay, data);
+    if (isMe) {
+      wireEdit(overlay, data);
+      wireTwoFactor(overlay, data);
+    }
   }
   
   function renderView(ov, d) {
@@ -90,6 +93,25 @@ export async function openProfile(userId) {
                      headers:{ Authorization:`Bearer ${token}` }, body: fd });
       }
       ov.remove(); openProfile(data.id);                  // reload fresh view
+    };
+  }
+
+  function wireTwoFactor(ov, data) {
+    const row = ov.querySelector("#pr-2fa-row");
+    const box = ov.querySelector("#pr-2fa");
+    row.style.display = "block";
+    box.checked = !!data.two_factor_auth;
+    box.onchange = async () => {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/twofactor", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ enabled: box.checked })
+      });
+      if (!res.ok) {
+        alert("Failed to update setting");
+        box.checked = !box.checked;
+      }
     };
   }
 

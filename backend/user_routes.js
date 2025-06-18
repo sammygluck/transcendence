@@ -16,13 +16,14 @@ async function routes(fastify, options) {
 		async (request, reply) => {
 			console.log(chatClients);
 			try {
-				const result = await fastify.sqlite.get(
-						`SELECT id, username, email, created_at,
-								avatar, full_name, alias
-						FROM users
-						WHERE id = ?`,
-						[request.params.id]
-					);
+                                const result = await fastify.sqlite.get(
+                                                `SELECT id, username, email, created_at,
+                                                                avatar, full_name, alias,
+                                                                two_factor_auth
+                                                FROM users
+                                                WHERE id = ?`,
+                                                [request.params.id]
+                                        );
 				if (!result) {
 					reply.statusCode = 404;
 					return { error: "User not found" };
@@ -36,11 +37,12 @@ async function routes(fastify, options) {
 				} else {
 					result.online = false;
 				}
-				if (!request.user || +request.user.id !== +request.params.id) {
-						delete result.email;
-						delete result.full_name;
-						delete result.created_at;
-				}
+                                if (!request.user || +request.user.id !== +request.params.id) {
+                                                delete result.email;
+                                                delete result.full_name;
+                                                delete result.created_at;
+                                                delete result.two_factor_auth;
+                                }
 				return result;
 			// } 
 			 } catch (error) {
@@ -62,10 +64,10 @@ async function routes(fastify, options) {
 		},
 		async (request, reply) => {
 			try {
-				const result = await fastify.sqlite.get(
-					"SELECT users.id, users.username, users.email, users.created_at, users.updated_at, users.blocked_users, users.friends, users.avatar FROM users WHERE id = ?",
-					[request.user.id]
-				);
+                                const result = await fastify.sqlite.get(
+                                        "SELECT users.id, users.username, users.email, users.created_at, users.updated_at, users.blocked_users, users.friends, users.avatar, users.two_factor_auth FROM users WHERE id = ?",
+                                        [request.user.id]
+                                );
 				if (!result) {
 					reply.statusCode = 404;
 					return { error: "User not found" };
@@ -417,9 +419,9 @@ async function routes(fastify, options) {
 
 // PUT /profile – update alias, full_name and email (for *your own* profile only)
 fastify.put(
-	"/profile",
-	{ onRequest: [fastify.authenticate] },
-	async (request, reply) => {
+        "/profile",
+        { onRequest: [fastify.authenticate] },
+        async (request, reply) => {
 		const { alias = null, full_name = null, email = null } = request.body || {};
 		if (!alias && !full_name && !email) {
 			reply.statusCode = 400;
@@ -444,7 +446,35 @@ fastify.put(
 			reply.statusCode = 500;
 			return { error: "DB error" };
 		}
-	}
+        }
+);
+
+// PUT /twofactor – toggle two factor authentication (for *your own* account)
+fastify.put(
+        "/twofactor",
+        { onRequest: [fastify.authenticate] },
+        async (request, reply) => {
+                if (typeof request.body.enabled !== "boolean") {
+                        reply.statusCode = 400;
+                        return { error: "Missing required fields" };
+                }
+                try {
+                        const updated_at = new Date().toISOString().slice(0, 19).replace("T", " ");
+                        const res = await fastify.sqlite.run(
+                                "UPDATE users SET two_factor_auth = ?, updated_at = ? WHERE id = ?",
+                                [request.body.enabled ? 1 : 0, updated_at, request.user.id]
+                        );
+                        if (res.changes === 0) {
+                                reply.statusCode = 404;
+                                return { error: "User not found" };
+                        }
+                        return { two_factor_auth: !!request.body.enabled };
+                } catch (err) {
+                        reply.statusCode = 500;
+                        console.error("Error updating two factor auth: " + err.message);
+                        return { error: "Error updating two factor auth" };
+                }
+        }
 );
 
 
